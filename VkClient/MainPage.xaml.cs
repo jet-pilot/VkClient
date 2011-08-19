@@ -38,7 +38,7 @@ namespace VkClient
 
         private void VkToolsActiveChanged(object sender, EventArgs e)
         {
-            this.Dispatcher.BeginInvoke(() => { this.UpdateUI(); });
+            this.Dispatcher.BeginInvoke(() => { this.UpdateUI(); this.onfeedload(); });
         }
 
         private void UpdateUI()
@@ -46,6 +46,7 @@ namespace VkClient
             var started = VkTools.Instance.Active;
             this.mainPane.Visibility = started ? Visibility.Visible : Visibility.Collapsed;
             this.unauthorizedPane.Visibility = started ? Visibility.Collapsed : Visibility.Visible;
+            token = accessInfoStore.Load();
         }
 
         private void signInButton_Click(object sender, RoutedEventArgs e)
