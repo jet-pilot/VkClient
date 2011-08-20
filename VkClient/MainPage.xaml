@@ -14,20 +14,20 @@
     SupportedOrientations="Portrait"  Orientation="Portrait"
     shell:SystemTray.IsVisible="False">
 
-    <!--<UserControl.Resources>
+    <UserControl.Resources>
         <DataTemplate x:Key="FeedTemplate">
             <Grid Margin="0,0,0,18">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <Image Source="{Binding AuthorImageUrl}" Grid.Column="0" VerticalAlignment="Top" Margin="0,10,12,0" />
+                <Image Source="{Binding photo}" Grid.Column="0" VerticalAlignment="Top" Margin="0,10,12,0" />
                 <StackPanel Grid.Column="1">
                     <TextBlock Text="{Binding text}" TextWrapping="Wrap" />
                 </StackPanel>
             </Grid>
         </DataTemplate>
-    </UserControl.Resources>-->
+    </UserControl.Resources>
 
     <!--LayoutRoot contains the root grid where all other page content is placed-->
     <Grid x:Name="LayoutRoot">
@@ -35,21 +35,38 @@
 
             <!--Panorama item one-->
             <controls:PanoramaItem Header="профиль">
-                <Grid/>
+            	<Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Image x:Name="avatar" Source="http://cs1495.vk.com/u00001/b_d33f0e80.jpg" Grid.Column="0" VerticalAlignment="Top" Margin="0,0,0,0" Width="150" Height="150"/>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock x:Name="lf_name" Text="{Binding name}" Margin="20,0,0,0" TextWrapping="Wrap" FontSize="32" />
+                    </StackPanel>
+                </Grid>
+            	
             </controls:PanoramaItem>
 
             <!--Panorama item two-->
             <controls:PanoramaItem Header="новости">
-                
-                <ListBox x:Name="feedListBox">
+
+                <!--<ListBox x:Name="feedListBox">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel>
-                                <TextBlock Margin="0,0,40,0" Text="{Binding text}" TextWrapping="Wrap" Width="450" />
-                                <Rectangle Height="20" />
+                            <StackPanel Orientation="Vertical">
+                                <TextBlock Text="{Binding first_name}" Style="{StaticResource PhoneTextLargeStyle}" />
+                                <TextBlock Text="{Binding text}" Style="{StaticResource PhoneTextSmallStyle}" />
                             </StackPanel>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
+                </ListBox>-->
+
+                <ListBox x:Name="feedListBox" ItemTemplate="{StaticResource FeedTemplate}">
                 </ListBox>
             </controls:PanoramaItem>
         </controls:Panorama>
@@ -63,7 +80,7 @@
 
     <phone:PhoneApplicationPage.ApplicationBar>
         <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True">
-            <shell:ApplicationBarIconButton x:Name="feedload" IconUri="/Images/appbar.check.rest.png" Text="Button 1"/>
+            <shell:ApplicationBarIconButton x:Name="feedload" IconUri="/Images/appbar.check.rest.png" Text="Button 1" Click="ProfileChanged" />
             <!--<shell:ApplicationBarIconButton IconUri="/Images/appbar_button2.png" Text="Button 2"/>-->
             <!--<shell:ApplicationBar.MenuItems>
                 <shell:ApplicationBarMenuItem Text="MenuItem 1"/>

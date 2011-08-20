@@ -36,14 +36,17 @@ namespace VkClient
 
         private void SignInButton_Click(object sender, EventArgs e)
         {
-            var accessInfo=new accessInfoBag
-            {
-                token=webBrowser.Source.Fragment.Substring(14,63),
-                uid = webBrowser.Source.Fragment.Substring(103)
-            };
-            accessInfoStore.Save(accessInfo);
-            VkTools.Instance.Start(accessInfo);
-            NavigationService.Navigate(new Uri("/MainPage.xaml", UriKind.Relative));
+            Dispatcher.BeginInvoke(() =>
+                {
+                    var accessInfo = new accessInfoBag
+                    {
+                        token = webBrowser.Source.Fragment.Substring(14, 63),
+                        uid = webBrowser.Source.Fragment.Substring(103)
+                    };
+                    accessInfoStore.Save(accessInfo);
+                    VkTools.Instance.Start(accessInfo);
+                    NavigationService.Navigate(new Uri("/MainPage.xaml", UriKind.RelativeOrAbsolute));
+                });
         }
 
     }

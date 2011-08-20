@@ -16,6 +16,7 @@ using System.IO.IsolatedStorage;
 using System.IO;
 using System.Xml.Linq;
 using VkClient.Classes.feed;
+using VkClient.Classes.Profile;
 
 namespace VkClient
 {
@@ -31,14 +32,21 @@ namespace VkClient
 
         private void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
-            VkTools.Instance.ActiveChanged += new EventHandler(VkToolsActiveChanged);
-            if (token != null) { this.onfeedload(); }
             this.UpdateUI();
+            VkTools.Instance.ActiveChanged += new EventHandler(VkToolsActiveChanged);
+            VkTools.Instance.ProfileChanged += new EventHandler(ProfileChanged);
+            
+        }
+
+        private void MainPage_Unloaded(object sender, RoutedEventArgs e)
+        {
+            VkTools.Instance.FeedChanged -= FeedChanged;
+            VkTools.Instance.ProfileChanged -= ProfileChanged;
         }
 
         private void VkToolsActiveChanged(object sender, EventArgs e)
         {
-            this.Dispatcher.BeginInvoke(() => { this.UpdateUI(); this.onfeedload(); });
+            this.Dispatcher.BeginInvoke(() => { this.UpdateUI(); });
         }
 
         private void UpdateUI()
@@ -46,9 +54,14 @@ namespace VkClient
             var started = VkTools.Instance.Active;
             this.mainPane.Visibility = started ? Visibility.Visible : Visibility.Collapsed;
             this.unauthorizedPane.Visibility = started ? Visibility.Collapsed : Visibility.Visible;
-            token = accessInfoStore.Load();
+            
+
+            VkTools.Instance.FeedChanged += new EventHandler(FeedChanged);
+            this.feedListBox.ItemsSource = VkTools.Instance.Feeds.GetItems();
+
         }
 
+        #region SignIn
         private void signInButton_Click(object sender, RoutedEventArgs e)
         {
             this.LocalSignIn();
@@ -58,52 +71,83 @@ namespace VkClient
         {
             NavigationService.Navigate(new Uri("/SignInPage.xaml", UriKind.Relative));
         }
+        #endregion
 
-
-        #region тестим HttpWebRequest/HttpWebResponse новости
-
-        string responseStringfeed;
-
-        //string request = string.Format("https://api.vkontakte.ru/method/newsfeed.get.xml?uid={0}&filters=post&access_token={1}", token.uid, token.token);
-
-        private void onfeedload()
+        private void FeedChanged(object sender, EventArgs e)
         {
-            HttpWebRequest web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/newsfeed.get.xml?uid={0}&filters=post&access_token={1}", token.uid, token.token));
-            web.Method = "POST";
-            web.ContentType = "application/x-www-form-urlencoded";
-            web.BeginGetRequestStream(RequestPrepare, web);
-            progressBar1.IsIndeterminate = true;
-        }
-
-        private void RequestPrepare(IAsyncResult e)
-        {
-            HttpWebRequest request = (HttpWebRequest)e.AsyncState;
-            request.BeginGetResponse(new AsyncCallback(ResponsePrepare), request);
-        }
-
-        private void ResponsePrepare(IAsyncResult e)
-        {
-            HttpWebRequest request = (HttpWebRequest)e.AsyncState;
-            HttpWebResponse response = (HttpWebResponse)request.EndGetResponse(e);
-
-            StreamReader responseReader = new StreamReader(response.GetResponseStream());
-
-            responseStringfeed = responseReader.ReadToEnd();
-
-            this.Dispatcher.BeginInvoke(() =>
-                {
-                    XElement xmlFeeds = XElement.Parse(responseStringfeed);
-                    feedListBox.ItemsSource = from feed in xmlFeeds.Descendants("item")
-                                              select new FeedItem
-                                              {
-                                                  text = feed.Element("text").Value
-                                              };
-                    progressBar1.IsIndeterminate = false;
-                });
+            var items = VkTools.Instance.Feeds.GetItems();
+            this.Dispatcher.BeginInvoke(() => { this.feedListBox.ItemsSource = items; });
             
         }
 
-        #endregion
+        private void ProfileChanged(object sender, EventArgs e)
+        {
+            var item = VkTools.Instance.Profiles.GetItems();
+        }
+
+        //#region тестим HttpWebRequest/HttpWebResponse новости
+        
+        //string responseStringfeed;
+
+        //private void onfeedload()
+        //{
+        //    HttpWebRequest web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/newsfeed.get.xml?uid={0}&filters=post&access_token={1}", token.uid, token.token));
+        //    web.Method = "POST";
+        //    web.ContentType = "application/x-www-form-urlencoded";
+        //    web.BeginGetRequestStream(RequestPrepare, web);
+        //    progressBar1.IsIndeterminate = true;
+        //}
+
+        //private void RequestPrepare(IAsyncResult e)
+        //{
+        //    HttpWebRequest request = (HttpWebRequest)e.AsyncState;
+        //    request.BeginGetResponse(new AsyncCallback(ResponsePrepare), request);
+        //}
+
+        //private void ResponsePrepare(IAsyncResult e)
+        //{
+        //    HttpWebRequest request = (HttpWebRequest)e.AsyncState;
+        //    HttpWebResponse response = (HttpWebResponse)request.EndGetResponse(e);
+
+        //    StreamReader responseReader = new StreamReader(response.GetResponseStream());
+
+        //    responseStringfeed = responseReader.ReadToEnd();
+
+        //    this.Dispatcher.BeginInvoke(() =>
+        //        {
+        //            XElement xmlFeeds = XElement.Parse(responseStringfeed);
+        //            //feedListBox.ItemsSource = from feed in xmlFeeds.Descendants("item")
+        //            //                          select new FeedItem
+        //            //                          {
+        //            //                              text = feed.Element("text").Value,
+                                                 
+        //            //                          };
+        //            //MessageBox.Show(responseStringfeed);
+
+        //            XElement newxmlFeeds = new XElement("response",
+        //                from item in xmlFeeds.Element("items").Elements("item")
+        //                join profile in xmlFeeds.Element("profiles").Elements("user")
+        //                on (string)item.Element("source_id") equals
+        //                    (string)profile.Element("uid")
+        //                select new XElement("feed",
+        //                    new XElement("first_name", profile.Element("first_name").Value +" "+ profile.Element("last_name").Value),
+        //                    new XElement("photo", profile.Element("photo").Value),
+        //                    new XElement("text", item.Element("text").Value)
+        //                    )
+        //                        );
+        //            feedListBox.ItemsSource = from feed in newxmlFeeds.Descendants("feed")
+        //                                      select new FeedItem
+        //                                      {
+        //                                          first_name = feed.Element("first_name").Value,
+        //                                          text = feed.Element("text").Value,
+        //                                          photo = feed.Element("photo").Value
+        //                                      };
+        //            progressBar1.IsIndeterminate = false;
+        //        });
+            
+        //}
+
+        //#endregion
         
     }
 }

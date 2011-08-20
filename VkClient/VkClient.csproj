@@ -68,6 +68,9 @@
     <Compile Include="Classes\Auth\OAuthRequest.cs" />
     <Compile Include="Classes\feed\FeedItem.cs" />
     <Compile Include="Classes\feed\FeedItemList.cs" />
+    <Compile Include="Classes\Profile\ProfileItem.cs" />
+    <Compile Include="Classes\Profile\ProfileItemList.cs" />
+    <Compile Include="Classes\VkServices.cs" />
     <Compile Include="Classes\VkTools.cs" />
     <Compile Include="Classes\Wall\WallItem.cs" />
     <Compile Include="MainPage.xaml.cs">

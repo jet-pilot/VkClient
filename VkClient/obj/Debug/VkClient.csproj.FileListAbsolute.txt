@@ -14,19 +14,3 @@ c:\users\sln\documents\visual studio 2010\Projects\VkClient\VkClient\obj\Debug\V
 c:\users\sln\documents\visual studio 2010\Projects\VkClient\VkClient\Bin\Debug\AppManifest.xaml
 c:\users\sln\documents\visual studio 2010\Projects\VkClient\VkClient\Bin\Debug\VkClient.xap
 c:\users\sln\documents\visual studio 2010\Projects\VkClient\VkClient\obj\Debug\XapCacheFile.xml
-D:\coding\VkClient\VkClient\Bin\Debug\ApplicationIcon.png
-D:\coding\VkClient\VkClient\Bin\Debug\Background.png
-D:\coding\VkClient\VkClient\Bin\Debug\VkClient.dll
-D:\coding\VkClient\VkClient\Bin\Debug\VkClient.pdb
-D:\coding\VkClient\VkClient\Bin\Debug\AppManifest.xaml
-D:\coding\VkClient\VkClient\Bin\Debug\VkClient.xap
-D:\coding\VkClient\VkClient\Bin\Debug\Microsoft.Phone.Controls.dll
-D:\coding\VkClient\VkClient\Bin\Debug\Microsoft.Phone.Controls.xml
-D:\coding\VkClient\VkClient\obj\Debug\ResolveAssemblyReference.cache
-D:\coding\VkClient\VkClient\obj\Debug\App.g.i.cs
-D:\coding\VkClient\VkClient\obj\Debug\MainPage.g.i.cs
-D:\coding\VkClient\VkClient\obj\Debug\SignInPage.g.i.cs
-D:\coding\VkClient\VkClient\obj\Debug\VkClient.g.resources
-D:\coding\VkClient\VkClient\obj\Debug\VkClient.dll
-D:\coding\VkClient\VkClient\obj\Debug\VkClient.pdb
-D:\coding\VkClient\VkClient\obj\Debug\XapCacheFile.xml

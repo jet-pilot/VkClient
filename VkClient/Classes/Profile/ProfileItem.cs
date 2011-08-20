@@ -8,17 +8,14 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
+using System.Collections.ObjectModel;
 
-namespace VkClient.Classes.feed
+namespace VkClient.Classes.Profile
 {
-    public class FeedItem
+    public class ProfileItem
     {
-        //public string type { get; set; }
-        //public string source_id { get; set; }
-        //public DateTime date { get; set; }
-        public string post_id { get; set; }
-        public string text { get; set; }
-        public string first_name { get; set; }
+        public string uid { get; set; }
+        public string name { get; set; }
         public string photo { get; set; }
     }
 }

@@ -9,30 +9,29 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using System.Collections.Generic;
-using System.Xml.Linq;
 using System.Collections.ObjectModel;
 
-namespace VkClient.Classes.feed
+namespace VkClient.Classes.Profile
 {
-    public class FeedItemList
+    public class ProfileItemList
     {
-        private List<FeedItem> items = new List<FeedItem>();
+        List<ProfileItem> items=new List<ProfileItem>();
         private object syncRoot = new Object();
 
 
-        public ReadOnlyCollection<FeedItem> GetItems()
+        public ReadOnlyCollection<ProfileItem> GetItems()
         {
-            List<FeedItem> items;
+            List<ProfileItem> items;
 
             lock (this.syncRoot)
             {
-                items = new List<FeedItem>(this.items);
+                items = new List<ProfileItem>(this.items);
             }
 
-            return new ReadOnlyCollection<FeedItem>(items);
+            return new ReadOnlyCollection<ProfileItem>(items);
         }
 
-        public void AddRange(IEnumerable<FeedItem> newItems)
+        public void AddRange(IEnumerable<ProfileItem> newItems)
         {
             lock (this.syncRoot)
             {
@@ -44,18 +43,13 @@ namespace VkClient.Classes.feed
             }
         }
 
-        private void AddItemInterval(FeedItem newItem)
+        private void AddItemInterval(ProfileItem newItem)
         {
             foreach (var item in this.items)
             {
-                if (item.post_id == newItem.post_id)
-                {
-                    return;
-                }
+                this.items.Add(newItem);
             }
 
-            this.items.Add(newItem);
-            //this.items.Insert(0, newItem);
         }
     }
 }
