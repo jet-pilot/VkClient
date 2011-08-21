@@ -8,15 +8,13 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
-using System.Collections.ObjectModel;
+using System.Xml.Serialization;
 
 namespace VkClient.Classes.Profile
 {
-    public class ProfileItem
+    public class response
     {
-        public string uid { get; set; }
-        public string first_name { get; set; }
-        public string last_name { get; set; }
-        public string photo { get; set; }
+        [XmlElement("user")]
+        public ProfileItem user { get; set; }
     }
 }

@@ -45,7 +45,7 @@ namespace VkClient
                     };
                     accessInfoStore.Save(accessInfo);
                     VkTools.Instance.Start(accessInfo);
-                    NavigationService.Navigate(new Uri("/MainPage.xaml", UriKind.RelativeOrAbsolute));
+                    NavigationService.Navigate(new Uri("/MainPage.xaml", UriKind.Relative));
                 });
         }
 

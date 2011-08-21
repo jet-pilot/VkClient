@@ -17,6 +17,7 @@ using System.IO;
 using System.Xml.Linq;
 using VkClient.Classes.feed;
 using VkClient.Classes.Profile;
+using System.Windows.Media.Imaging;
 
 namespace VkClient
 {
@@ -28,13 +29,20 @@ namespace VkClient
         {
             InitializeComponent();
             this.Loaded += new RoutedEventHandler(MainPage_Loaded);
+            this.Unloaded += new RoutedEventHandler(MainPage_Unloaded);
         }
 
         private void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
-            this.UpdateUI();
-            VkTools.Instance.ActiveChanged += new EventHandler(VkToolsActiveChanged);
             VkTools.Instance.ProfileChanged += new EventHandler(ProfileChanged);
+            VkTools.Instance.ActiveChanged += new EventHandler(VkToolsActiveChanged);
+            VkTools.Instance.FeedChanged += new EventHandler(FeedChanged);
+
+            this.UpdateUI();
+            this.feedListBox.ItemsSource = VkTools.Instance.Feeds.GetItems();
+            //this.lf_name.Text = VkTools.Instance.user.first_name + " " + VkTools.Instance.user.last_name;
+            //ImageSource image = new BitmapImage(new Uri(VkTools.Instance.user.photo));
+            //this.avatar.Source = image;
             
         }
 
@@ -54,11 +62,6 @@ namespace VkClient
             var started = VkTools.Instance.Active;
             this.mainPane.Visibility = started ? Visibility.Visible : Visibility.Collapsed;
             this.unauthorizedPane.Visibility = started ? Visibility.Collapsed : Visibility.Visible;
-            
-
-            VkTools.Instance.FeedChanged += new EventHandler(FeedChanged);
-            this.feedListBox.ItemsSource = VkTools.Instance.Feeds.GetItems();
-
         }
 
         #region SignIn
@@ -82,7 +85,12 @@ namespace VkClient
 
         private void ProfileChanged(object sender, EventArgs e)
         {
-            var item = VkTools.Instance.Profiles.GetItems();
+            this.Dispatcher.BeginInvoke(() =>
+                {
+                    this.lf_name.Text = VkTools.Instance.user.first_name + " " + VkTools.Instance.user.last_name;
+                    ImageSource image = new BitmapImage(new Uri(VkTools.Instance.user.photo));
+                    this.avatar.Source = image;
+                });
         }
 
         //#region тестим HttpWebRequest/HttpWebResponse новости

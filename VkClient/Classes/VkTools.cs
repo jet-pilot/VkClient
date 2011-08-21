@@ -16,6 +16,9 @@ using System.IO;
 using System.Xml.Linq;
 using System.Collections.Generic;
 using VkClient.Classes.Profile;
+using System.Xml.Serialization;
+using System.Windows.Threading;
+using System.Windows.Media.Imaging;
 
 namespace VkClient.Classes
 {
@@ -60,7 +63,8 @@ namespace VkClient.Classes
         private Timer refreshTimer;
 
         public FeedItemList Feeds { get; private set; }
-        public ProfileItemList Profiles { get; private set; }
+
+        public ProfileItem user { get; private set; }
 
         private VkTools()
         {
@@ -69,7 +73,7 @@ namespace VkClient.Classes
             this.refreshTimer = new Timer(this.RefreshTimerCallback, null, -1, -1);
 
             this.Feeds = new FeedItemList();
-            this.Profiles = new ProfileItemList();
+            this.user = new ProfileItem();
         }
 
         public bool Active
@@ -107,6 +111,8 @@ namespace VkClient.Classes
             this.refreshTimer.Change(0, RefreshInterval * 1000);
             this.active = true;
             this.OnActiveChanged();
+            //this.ProfileCallback();
+            //this.ListFeedsCallback();
         }
 
         private void StopTimer()
@@ -118,8 +124,8 @@ namespace VkClient.Classes
 
         private void RefreshTimerCallback(object state)
         {
-            this.ListFeedsCallback();
             this.ProfileCallback();
+            this.ListFeedsCallback();
         }
         #endregion
 
@@ -192,7 +198,7 @@ namespace VkClient.Classes
         private void ProfileCallback()
         {
             if (token == null) { return; }
-            HttpWebRequest web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vk.com/method/getProfiles.xml?uid={0}&fields=first_name,last_name,photo&access_token={1}", token.uid, token.token));
+            HttpWebRequest web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vk.com/method/getProfiles.xml?uid={0}&fields=first_name,last_name,photo_medium&access_token={1}", token.uid, token.token));
             web.Method = "POST";
             web.ContentType = "application/x-www-form-urlencoded";
             web.BeginGetResponse(new AsyncCallback(ResponseProfile), web);
@@ -206,17 +212,45 @@ namespace VkClient.Classes
             StreamReader responseReader = new StreamReader(response.GetResponseStream());
 
             string responseStringProfile = responseReader.ReadToEnd();
-
             XElement xmlProfiles = XElement.Parse(responseStringProfile);
-            var items = from profile in xmlProfiles.Element("response").Elements("user")
-                        select new ProfileItem
-                        {
-                            uid=profile.Element("uid").Value,
-                            name = profile.Element("last_name").Value + " " + profile.Element("first_name").Value,
-                            photo = profile.Element("photo_medium").Value
-                        };
-            this.Profiles.AddRange(items);
-            this.OnFeedChanged();
+
+            
+            //ImageSource source = new BitmapImage(new Uri(image));
+
+
+            user.first_name = xmlProfiles.Element("user").Element("first_name").Value;
+            user.last_name = xmlProfiles.Element("user").Element("last_name").Value;
+            user.photo = xmlProfiles.Element("user").Element("photo_medium").Value;
+            user.uid = xmlProfiles.Element("user").Element("uid").Value;
+
+
+            #region десериализация не робит
+            //XmlSerializer reader = new XmlSerializer(typeof(ProfileItem));
+            //try
+            //{
+            //    var usefr = reader.Deserialize(responseReader);
+            //}
+            //catch
+            //{
+            //    return;
+            //}
+            #endregion
+
+
+
+
+            //XElement xmlProfiles = XElement.Parse(responseStringProfile);
+            //var items = from profile in xmlProfiles.Element("response").Elements("user")
+            //            select new ProfileItem
+            //            {
+            //                uid=profile.Element("uid").Value,
+            //                name = profile.Element("last_name").Value + " " + profile.Element("first_name").Value,
+            //                photo = profile.Element("photo_medium").Value
+            //            };
+            //this.Profiles.AddRange(items);
+
+
+            this.OnProfileChanged();
         }
 
         #endregion

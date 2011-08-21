@@ -58,6 +58,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="mscorlib.extensions" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Xml.Serialization" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App.xaml.cs">
@@ -68,6 +69,7 @@
     <Compile Include="Classes\Auth\OAuthRequest.cs" />
     <Compile Include="Classes\feed\FeedItem.cs" />
     <Compile Include="Classes\feed\FeedItemList.cs" />
+    <Compile Include="Classes\Profile\response.cs" />
     <Compile Include="Classes\Profile\ProfileItem.cs" />
     <Compile Include="Classes\Profile\ProfileItemList.cs" />
     <Compile Include="Classes\VkServices.cs" />
