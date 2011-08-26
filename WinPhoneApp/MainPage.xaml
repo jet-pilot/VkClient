@@ -1,0 +1,83 @@
+﻿<phone:PhoneApplicationPage 
+    x:Class="WinPhoneApp.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:phone="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone"
+    xmlns:shell="clr-namespace:Microsoft.Phone.Shell;assembly=Microsoft.Phone"
+    xmlns:controls="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:data="clr-namespace:WinPhoneApp.Data.Feed"
+    xmlns:photos="clr-namespace:WinPhoneApp.Data.Photo"
+    xmlns:myprofile="clr-namespace:WinPhoneApp.Data.Profile"
+    xmlns:toolkit="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone.Controls.Toolkit"
+    mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="800"
+    FontFamily="{StaticResource PhoneFontFamilyNormal}"
+    FontSize="{StaticResource PhoneFontSizeNormal}"
+    Foreground="{StaticResource PhoneForegroundBrush}"
+    SupportedOrientations="Portrait"  Orientation="Portrait"
+    shell:SystemTray.IsVisible="False">
+
+    <phone:PhoneApplicationPage.Resources>
+        <data:FeedList x:Key="FeedListData"/>
+        <photos:PhotoItemList x:Key="FeedPhotoListData"/>
+        <myprofile:MyProfile x:Key="MyProfileData"/>
+    </phone:PhoneApplicationPage.Resources>
+
+    <!--LayoutRoot contains the root grid where all other page content is placed-->
+    <Grid x:Name="LayoutRoot">
+        <controls:Panorama Title="Санал Хохлов">
+
+            <!--Panorama item one-->
+            <controls:PanoramaItem Header="профиль">
+                <Grid x:Name="MyProfilePanel" DataContext="{Binding Source={StaticResource MyProfileData}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Image x:Name="photo" Grid.Column="0" VerticalAlignment="Top" Margin="0,0,0,0" Width="150" Height="150"/>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock x:Name="LF_name" Margin="20,0,0,0" TextWrapping="Wrap" FontSize="32" />
+                    </StackPanel>
+                </Grid>
+            </controls:PanoramaItem>
+
+            <!--Panorama item two-->
+            <controls:PanoramaItem Header="новости">
+                <Grid x:Name="FeedPanel"  DataContext="{Binding Source={StaticResource FeedListData}}">
+                    <ListBox x:Name="feedListBox" ItemsSource="{Binding}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,18">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Image Source="{Binding Avatar}" Grid.Column="0" VerticalAlignment="Top" Margin="0,10,12,0" />
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="{Binding Text}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </controls:PanoramaItem>
+
+            <controls:PanoramaItem Header="фото" Orientation="Horizontal">
+                <Grid x:Name="FeedPhotoPanel"  DataContext="{Binding Source={StaticResource FeedPhotoListData}}">
+                    <toolkit:WrapPanel x:Name="wrapPanel" Orientation="Vertical"/>
+                </Grid>
+            </controls:PanoramaItem>
+        </controls:Panorama>
+        <ProgressBar Height="4" HorizontalAlignment="Left" Margin="10,10,0,0" Name="progressBar1" VerticalAlignment="Top" Width="460" />
+    </Grid>
+
+
+    <!--Panorama-based applications should not show an ApplicationBar-->
+
+</phone:PhoneApplicationPage>
