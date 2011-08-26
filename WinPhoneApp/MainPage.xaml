@@ -42,6 +42,7 @@
                     <Image x:Name="photo" Grid.Column="0" VerticalAlignment="Top" Margin="0,0,0,0" Width="150" Height="150"/>
                     <StackPanel Grid.Column="1">
                         <TextBlock x:Name="LF_name" Margin="20,0,0,0" TextWrapping="Wrap" FontSize="32" />
+                        <TextBlock x:Name="Status" Margin="20,0,0,0" TextWrapping="Wrap" FontSize="16" />
                     </StackPanel>
                 </Grid>
             </controls:PanoramaItem>

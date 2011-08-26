@@ -23,7 +23,7 @@ namespace WinPhoneApp
 {
     public partial class MainPage : PhoneApplicationPage
     {
-        private FeedList fl=new FeedList();
+        private FeedList fl = new FeedList();
         private PhotoItemList pl = new PhotoItemList();
         private MyProfile mp;
 
@@ -59,6 +59,8 @@ namespace WinPhoneApp
 
                 GetMyProfile();
                 ListProfileCallback();
+
+                ListStatusCallback();
 
             }
         }
@@ -290,5 +292,37 @@ namespace WinPhoneApp
         }
 
         #endregion
+
+        private void ListStatusCallback()
+        {
+            HttpWebRequest web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/status.get?uid={0}&access_token={1}", Client.Instance.Access_token.uid, Client.Instance.Access_token.token));
+            web.Method = "POST";
+            web.ContentType = "application/x-www-form-urlencoded";
+            web.BeginGetResponse(new AsyncCallback(ResponcePrepareStatus), web);
+            progressBar1.IsIndeterminate = true;
+        }
+        public void ResponcePrepareStatus(IAsyncResult e)
+        {
+            HttpWebRequest request = (HttpWebRequest)e.AsyncState;
+            HttpWebResponse response = (HttpWebResponse)request.EndGetResponse(e);
+
+            StreamReader responseReader = new StreamReader(response.GetResponseStream());
+
+            string responseStringStatus = responseReader.ReadToEnd();
+
+            JObject o = JObject.Parse(responseStringStatus);
+            //JArray responseArray = (JArray)o["response"];
+            try
+            {
+                this.Dispatcher.BeginInvoke(() =>
+                    {
+                        this.Status.Text = (string)o["response"]["text"];
+                    });
+            }
+            catch (Exception ex)
+            {
+                this.Dispatcher.BeginInvoke(() => { MessageBox.Show(ex.Message); progressBar1.IsIndeterminate = false; });
+            }
+        }
     }
 }
