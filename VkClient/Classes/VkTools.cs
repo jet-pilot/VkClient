@@ -16,9 +16,11 @@ using System.IO;
 using System.Xml.Linq;
 using System.Collections.Generic;
 using VkClient.Classes.Profile;
-using System.Xml.Serialization;
 using System.Windows.Threading;
 using System.Windows.Media.Imaging;
+using VkClient.Classes.Photo;
+using VkClient.Classes.Message;
+using System.Collections.ObjectModel;
 
 namespace VkClient.Classes
 {
@@ -63,8 +65,9 @@ namespace VkClient.Classes
         private Timer refreshTimer;
 
         public FeedItemList Feeds { get; private set; }
-
         public ProfileItem user { get; private set; }
+        public List<PhotoItem> FeedPhotos { get; private set; }
+        public MessageItemList Messages { get; private set; }
 
         private VkTools()
         {
@@ -111,8 +114,6 @@ namespace VkClient.Classes
             this.refreshTimer.Change(0, RefreshInterval * 1000);
             this.active = true;
             this.OnActiveChanged();
-            //this.ProfileCallback();
-            //this.ListFeedsCallback();
         }
 
         private void StopTimer()
@@ -142,7 +143,7 @@ namespace VkClient.Classes
         private void ListFeedsCallback()
         {
             if (token == null) { return; }
-            HttpWebRequest web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/newsfeed.get.xml?uid={0}&filters=post&access_token={1}", token.uid, token.token));
+            HttpWebRequest web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/newsfeed.get.xml?uid={0}&access_token={1}", token.uid, token.token));
             web.Method = "POST";
             web.ContentType = "application/x-www-form-urlencoded";
             web.BeginGetResponse(new AsyncCallback(ResponsePrepare), web);
@@ -158,25 +159,35 @@ namespace VkClient.Classes
             string responseStringfeed = responseReader.ReadToEnd();
 
             XElement xmlFeeds = XElement.Parse(responseStringfeed);
-            XElement newxmlFeeds = new XElement("response",
+
+            try
+            {
+                XElement newxmlFeeds = new XElement("posts",
                 from item in xmlFeeds.Element("items").Elements("item")
                 join profile in xmlFeeds.Element("profiles").Elements("user")
-                on (string)item.Element("source_id") equals
-                    (string)profile.Element("uid")
+                on (string)item.Element("source_id") equals (string)profile.Element("uid")
+                where (string)item.Element("type") == "post"
                 select new XElement("feed",
                     new XElement("first_name", profile.Element("first_name").Value + " " + profile.Element("last_name").Value),
                     new XElement("photo", profile.Element("photo").Value),
                     new XElement("text", item.Element("text").Value)
                     )
-                );
-            var items = from feed in newxmlFeeds.Descendants("feed")
-                        select new FeedItem
-                        {
-                            first_name = feed.Element("first_name").Value,
-                            text = feed.Element("text").Value,
-                            photo = feed.Element("photo").Value
-                        };
-            this.Feeds.AddRange(items);
+                    );
+
+                var items = from feed in newxmlFeeds.Descendants("feed")
+                            select new FeedItem
+                            {
+                                first_name = feed.Element("first_name").Value,
+                                text = feed.Element("text").Value,
+                                photo = feed.Element("photo").Value
+                            };
+                this.Feeds.AddRange(items);
+                this.OnFeedChanged();
+            }
+            catch
+            {
+                MessageBox.Show("Новости не загрузились");
+            }
             this.OnFeedChanged();
             //progressBar1.IsIndeterminate = false;
 
@@ -215,44 +226,58 @@ namespace VkClient.Classes
             XElement xmlProfiles = XElement.Parse(responseStringProfile);
 
             
-            //ImageSource source = new BitmapImage(new Uri(image));
-
-
             user.first_name = xmlProfiles.Element("user").Element("first_name").Value;
             user.last_name = xmlProfiles.Element("user").Element("last_name").Value;
             user.photo = xmlProfiles.Element("user").Element("photo_medium").Value;
             user.uid = xmlProfiles.Element("user").Element("uid").Value;
 
-
-            #region десериализация не робит
-            //XmlSerializer reader = new XmlSerializer(typeof(ProfileItem));
-            //try
-            //{
-            //    var usefr = reader.Deserialize(responseReader);
-            //}
-            //catch
-            //{
-            //    return;
-            //}
-            #endregion
-
-
-
-
-            //XElement xmlProfiles = XElement.Parse(responseStringProfile);
-            //var items = from profile in xmlProfiles.Element("response").Elements("user")
-            //            select new ProfileItem
-            //            {
-            //                uid=profile.Element("uid").Value,
-            //                name = profile.Element("last_name").Value + " " + profile.Element("first_name").Value,
-            //                photo = profile.Element("photo_medium").Value
-            //            };
-            //this.Profiles.AddRange(items);
-
-
             this.OnProfileChanged();
         }
 
         #endregion
+
+        //#region личка
+
+        //private void OnMessagesChanged()
+        //{
+        //    var handler = this.MessagesChanged;
+        //    if (handler != null)
+        //    {
+        //        handler(this, new EventArgs());
+        //    }
+        //}
+
+        //private void ListDialogsCallback()
+        //{
+        //    if (token == null) { return; }
+        //    HttpWebRequest web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vk.com/method/messages.get.xml?filters=4&preview_length=50&access_token={0}", token.token));
+        //    web.Method = "POST";
+        //    web.ContentType = "application/x-www-form-urlencoded";
+        //    web.BeginGetResponse(new AsyncCallback(ResponsePrivateMessage), web);
+        //}
+
+        //private void ResponsePrivateMessage(IAsyncResult e)
+        //{
+        //    HttpWebRequest request = (HttpWebRequest)e.AsyncState;
+        //    HttpWebResponse response = (HttpWebResponse)request.EndGetResponse(e);
+
+        //    StreamReader responseReader = new StreamReader(response.GetResponseStream());
+
+        //    string responseStringmessages = responseReader.ReadToEnd();
+
+        //    XElement xmlMessages = XElement.Parse(responseStringmessages);
+        //    //var items = from message in xmlMessages.Descendants("response")
+        //    //            select new MessageItem
+        //    //            {
+        //    //                Unread = ((message.Element("read_state").Value == "0") ? true : false),
+        //    //                Sender = message.Element("uid").Value,
+        //    //                Subject = message.Element("title").Value,
+        //    //                Body = message.Element("body").Value,
+        //    //                Time = message.Element("date").Value
+        //    //            };
+        //    //this.Messages.AddRange(items);
+        //    this.OnMessagesChanged();
+        //}
+        //#endregion
     }
 }

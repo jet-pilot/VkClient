@@ -50,6 +50,7 @@
   <ItemGroup>
     <Reference Include="Microsoft.Phone" />
     <Reference Include="Microsoft.Phone.Controls, Version=7.0.0.0, Culture=neutral, PublicKeyToken=24eec0d8c86cda1e, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.Phone.Controls.Toolkit, Version=7.0.0.0, Culture=neutral, PublicKeyToken=b772ad94eb9ca604, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.Phone.Interop" />
     <Reference Include="System.Windows" />
     <Reference Include="system" />
@@ -69,14 +70,22 @@
     <Compile Include="Classes\Auth\OAuthRequest.cs" />
     <Compile Include="Classes\feed\FeedItem.cs" />
     <Compile Include="Classes\feed\FeedItemList.cs" />
-    <Compile Include="Classes\Profile\response.cs" />
+    <Compile Include="Classes\Message\MessageItem.cs" />
+    <Compile Include="Classes\Message\MessageItemList.cs" />
+    <Compile Include="Classes\Photo\PhotoItem.cs" />
     <Compile Include="Classes\Profile\ProfileItem.cs" />
     <Compile Include="Classes\Profile\ProfileItemList.cs" />
     <Compile Include="Classes\VkServices.cs" />
     <Compile Include="Classes\VkTools.cs" />
     <Compile Include="Classes\Wall\WallItem.cs" />
+    <Compile Include="Data\EmailCollection.cs" />
+    <Compile Include="Data\EmailObject.cs" />
+    <Compile Include="Data\UnreadToBrushConverter.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Messages.xaml.cs">
+      <DependentUpon>Messages.xaml</DependentUpon>
     </Compile>
     <Compile Include="SignInPage.xaml.cs">
       <DependentUpon>SignInPage.xaml</DependentUpon>
@@ -89,6 +98,10 @@
       <Generator>MSBuild:Compile</Generator>
     </ApplicationDefinition>
     <Page Include="MainPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Messages.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -110,6 +123,10 @@
     </Content>
     <Content Include="Images\appbar.check.rest.png" />
     <Content Include="Images\appbar.next.rest.png" />
+    <Content Include="Images\ApplicationBar.Cancel.png" />
+    <Content Include="Images\ApplicationBar.Check.png" />
+    <Content Include="Images\ApplicationBar.Delete.png" />
+    <Content Include="Images\ApplicationBar.Select.png" />
     <Content Include="SplashScreenImage.jpg" />
   </ItemGroup>
   <ItemGroup />

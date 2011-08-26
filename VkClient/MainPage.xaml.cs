@@ -24,6 +24,7 @@ namespace VkClient
     public partial class MainPage : PhoneApplicationPage
     {
         static accessInfoBag token = accessInfoStore.Load();
+        Random rnd = new Random();
                 
         public MainPage()
         {
@@ -51,6 +52,41 @@ namespace VkClient
             VkTools.Instance.FeedChanged -= FeedChanged;
             VkTools.Instance.ProfileChanged -= ProfileChanged;
         }
+
+
+        private void OnClear(object sender, RoutedEventArgs e)
+        {
+            wrapPanel.Children.Clear();
+        }
+
+        private void OnAdd(object sender, RoutedEventArgs e)
+        {
+            int count = Int32.Parse((string)((FrameworkElement)sender).Tag);
+
+            while (count-- > 0)
+            {
+                AddItem();
+            }
+        }
+
+        private void AddItem()
+        {
+            Border b = new Border()
+            {
+                Width = 150,
+                Height = 150,
+                Background = new SolidColorBrush(Color.FromArgb(255, (byte)rnd.Next(256), (byte)rnd.Next(256), (byte)rnd.Next(256))),
+                BorderThickness = new Thickness(2),
+                Margin = new Thickness(8)
+            };
+
+            b.BorderBrush = (SolidColorBrush)Resources["PhoneForegroundBrush"];
+
+
+            wrapPanel.Children.Add(b);
+            
+        }
+
 
         private void VkToolsActiveChanged(object sender, EventArgs e)
         {
@@ -91,6 +127,11 @@ namespace VkClient
                     ImageSource image = new BitmapImage(new Uri(VkTools.Instance.user.photo));
                     this.avatar.Source = image;
                 });
+        }
+
+        private void Messages_Click(object sender, EventArgs e)
+        {
+            NavigationService.Navigate(new Uri("/Messages.xaml", UriKind.RelativeOrAbsolute));
         }
 
         //#region тестим HttpWebRequest/HttpWebResponse новости

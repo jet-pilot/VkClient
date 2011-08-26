@@ -14,11 +14,11 @@ namespace VkClient.Classes.Auth
     public class OAuthRequest
     {
         public virtual bool OAuthCallbackConfirmed { get; set; }
-        public static string client_id = "2438043";
+        public static string client_id = "2449855";
         public static string auth_uri = "http://api.vk.com/oauth/authorize";
         public static string redirect_uri = "http://api.vk.com/blank.html";
         public static string display = "wap";
-        public static string scope = "8192";
+        public static string scope = "13318";
         public static string response_type = "token";
 
         public static string GetAuthUrl()

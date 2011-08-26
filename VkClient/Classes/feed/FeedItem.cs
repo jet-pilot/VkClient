@@ -8,6 +8,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
+using VkClient.Classes.Photo;
+using System.Collections.Generic;
 
 namespace VkClient.Classes.feed
 {
@@ -20,5 +22,13 @@ namespace VkClient.Classes.feed
         public string text { get; set; }
         public string first_name { get; set; }
         public string photo { get; set; }
+    }
+
+
+    public class FeedPhoto
+    {
+        public string source_id { get; set; }
+        public DateTime date { get; set; }
+        public List<PhotoItem> photos { get; set; }
     }
 }

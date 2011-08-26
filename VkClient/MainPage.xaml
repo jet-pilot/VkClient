@@ -6,14 +6,14 @@
     xmlns:shell="clr-namespace:Microsoft.Phone.Shell;assembly=Microsoft.Phone"
     xmlns:controls="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:toolkit="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone.Controls.Toolkit"
     mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="728"
     FontFamily="{StaticResource PhoneFontFamilyNormal}"
     FontSize="{StaticResource PhoneFontSizeNormal}"
     Foreground="{StaticResource PhoneForegroundBrush}"
     SupportedOrientations="Portrait"  Orientation="Portrait"
-    shell:SystemTray.IsVisible="False"
-    >
+    shell:SystemTray.IsVisible="False">
 
     <UserControl.Resources>
         <DataTemplate x:Key="FeedTemplate">
@@ -70,6 +70,26 @@
                 <ListBox x:Name="feedListBox" ItemTemplate="{StaticResource FeedTemplate}">
                 </ListBox>
             </controls:PanoramaItem>
+
+            <controls:PanoramaItem Header="home">
+                <StackPanel>
+                    <Button Content="clear" Click="OnClear"/>
+                    <Button Content="+1 item" Tag="1" Click="OnAdd"/>
+                    <Button Content="+8 items" Tag="8" Click="OnAdd"/>
+                    <Button Content="+16 items" Tag="16" Click="OnAdd"/>
+                    <TextBlock Text="note" Style="{StaticResource PhoneTextLargeStyle}"/>
+                    <TextBlock TextWrapping="Wrap" Style="{StaticResource PhoneTextNormalStyle}">
+                        <TextBlock.Text>Tap items to remove them. The items handle the GestureListener.Tap event. See the code-behind for an example of how to hook it up in code.</TextBlock.Text>
+                    </TextBlock>
+                </StackPanel>
+            </controls:PanoramaItem>
+
+
+            <controls:PanoramaItem Header="items" Orientation="Horizontal">
+                <toolkit:WrapPanel x:Name="wrapPanel" Orientation="Vertical"/>
+            </controls:PanoramaItem>
+            
+            
         </controls:Panorama>
 
         <StackPanel x:Name="unauthorizedPane" Grid.Row="1" Background="{StaticResource PhoneBackgroundBrush}" Visibility="Collapsed">
@@ -81,7 +101,7 @@
 
     <phone:PhoneApplicationPage.ApplicationBar>
         <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True">
-            <shell:ApplicationBarIconButton x:Name="feedload" IconUri="/Images/appbar.check.rest.png" Text="Button 1" Click="ProfileChanged" />
+            <shell:ApplicationBarIconButton x:Name="feedload" IconUri="/Images/appbar.check.rest.png" Text="Button 1" Click="Messages_Click"/>
             <!--<shell:ApplicationBarIconButton IconUri="/Images/appbar_button2.png" Text="Button 2"/>-->
             <!--<shell:ApplicationBar.MenuItems>
                 <shell:ApplicationBarMenuItem Text="MenuItem 1"/>
