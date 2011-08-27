@@ -1,0 +1,13 @@
+﻿<xapCache source="D:\coding\VkClient\WinPhoneApp\Bin\Debug\WinPhoneApp.xap" wasSigned="False" certificateThumbprint="" TimeStampUrl="" lastWriteTime="27.08.2011 22:30:28">
+  <file source="D:\coding\VkClient\WinPhoneApp\Bin\Debug\WMAppManifest.xml" archivePath="WMAppManifest.xml" lastWriteTime="26.08.2011 22:09:46" />
+  <file source="D:\coding\VkClient\WinPhoneApp\Background.png" archivePath="Background.png" lastWriteTime="23.08.2011 23:20:44" />
+  <file source="D:\coding\VkClient\WinPhoneApp\ApplicationIcon.png" archivePath="ApplicationIcon.png" lastWriteTime="26.08.2011 22:51:42" />
+  <file source="D:\coding\VkClient\WinPhoneApp\obj\Debug\WinPhoneApp.dll" archivePath="WinPhoneApp.dll" lastWriteTime="27.08.2011 22:30:27" />
+  <file source="C:\Program Files (x86)\Microsoft SDKs\Windows Phone\v7.1\Libraries\Silverlight\Microsoft.Phone.Controls.dll" archivePath="Microsoft.Phone.Controls.dll" lastWriteTime="28.07.2011 20:20:42" />
+  <file source="C:\Program Files (x86)\Microsoft SDKs\Windows Phone\v7.1\Toolkit\Aug11\Bin\Microsoft.Phone.Controls.Toolkit.dll" archivePath="Microsoft.Phone.Controls.Toolkit.dll" lastWriteTime="12.08.2011 18:19:16" />
+  <file source="D:\coding\VkClient\WinPhoneApp\Json\Newtonsoft.Json.WindowsPhone.dll" archivePath="Newtonsoft.Json.WindowsPhone.dll" lastWriteTime="23.04.2011 13:29:26" />
+  <file source="D:\coding\VkClient\WinPhoneApp\Images\appbar.check.rest.png" archivePath="Images\appbar.check.rest.png" lastWriteTime="25.08.2011 20:54:39" />
+  <file source="D:\coding\VkClient\WinPhoneApp\Images\appbar.next.rest.png" archivePath="Images\appbar.next.rest.png" lastWriteTime="24.08.2011 11:26:46" />
+  <file source="D:\coding\VkClient\WinPhoneApp\SplashScreenImage.jpg" archivePath="SplashScreenImage.jpg" lastWriteTime="23.08.2011 23:20:44" />
+  <file source="D:\coding\VkClient\WinPhoneApp\Bin\Debug\AppManifest.xaml" archivePath="AppManifest.xaml" lastWriteTime="26.08.2011 22:09:46" />
+</xapCache>
