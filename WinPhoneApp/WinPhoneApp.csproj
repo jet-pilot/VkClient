@@ -112,6 +112,7 @@
     <Content Include="Images\appbar.check.rest.png" />
     <Content Include="Images\appbar.next.rest.png" />
     <Content Include="SplashScreenImage.jpg" />
+    <Resource Include="Vkontakte.jpg" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\Silverlight for Phone\$(TargetFrameworkVersion)\Microsoft.Silverlight.$(TargetFrameworkProfile).Overrides.targets" />

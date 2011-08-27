@@ -24,13 +24,13 @@ namespace WinPhoneApp.Data.Photo
 
     public class PhotoItem : INotifyPropertyChanged
     {
-        private string _pid;
-        private string _owner_id;
-        private string _aid;
+        private int _pid;
+        private int _owner_id;
+        private int _aid;
         private string _src;
         private string _src_big;
 
-        public PhotoItem(string pid, string owner_id, string aid, string src, string src_big)
+        public PhotoItem(int pid, int owner_id, int aid, string src, string src_big)
         {
             this._pid = pid;
             this._owner_id = owner_id;
@@ -39,7 +39,7 @@ namespace WinPhoneApp.Data.Photo
             this._src_big = src_big;
         }
 
-        public string Pid
+        public int Pid
         {
             get { return _pid; }
             set
@@ -49,7 +49,7 @@ namespace WinPhoneApp.Data.Photo
             }
         }
 
-        public string OwnerId
+        public int OwnerId
         {
             get { return _owner_id; }
             set
@@ -59,7 +59,7 @@ namespace WinPhoneApp.Data.Photo
             }
         }
 
-        public string Aid
+        public int Aid
         {
             get { return _aid; }
             set

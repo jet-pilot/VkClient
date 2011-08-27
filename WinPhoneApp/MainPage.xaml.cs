@@ -164,7 +164,7 @@ namespace WinPhoneApp
 
         private void ListFeedPhotosCallback()
         {
-            HttpWebRequest web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/newsfeed.get.xml?filters=photo&uid={0}&access_token={1}", Client.Instance.Access_token.uid, Client.Instance.Access_token.token));
+            HttpWebRequest web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/newsfeed.get?filters=photo&uid={0}&access_token={1}", Client.Instance.Access_token.uid, Client.Instance.Access_token.token));
             web.Method = "POST";
             web.ContentType = "application/x-www-form-urlencoded";
             web.BeginGetResponse(new AsyncCallback(ResponsePreparePhotos), web);
@@ -180,15 +180,24 @@ namespace WinPhoneApp
 
             string responseStringfeedphotos = responseReader.ReadToEnd();
 
-            XElement xmlFeedPhotos = XElement.Parse(responseStringfeedphotos);
+            JObject o = JObject.Parse(responseStringfeedphotos);
+
+            JArray responseArray = (JArray)o["response"]["items"];
+
+            //XElement xmlFeedPhotos = XElement.Parse(responseStringfeedphotos);
 
             try
             {
-                var items = from feed in xmlFeedPhotos.Element("items").Element("item").Element("photos").Elements("photo")
-                            select new PhotoItem(feed.Element("pid").Value, feed.Element("owner_id").Value, feed.Element("aid").Value, feed.Element("src").Value, feed.Element("src_big").Value);
-                foreach (var item in items)
+                /*var items = from feed in xmlFeedPhotos.Element("items").Element("item").Element("photos").Elements("photo")
+                            select new PhotoItem(feed.Element("pid").Value, feed.Element("owner_id").Value, feed.Element("aid").Value, feed.Element("src").Value, feed.Element("src_big").Value);*/
+                foreach (var item in responseArray)
                 {
-                    pl.Add(item);
+                    JArray photos = (JArray)item["photos"];
+                    for (int i = 1; i < photos.Count; i++)
+                    {
+                        PhotoItem photoItem = new PhotoItem((int)photos[i]["pid"], (int)photos[i]["owner_id"], (int)photos[i]["aid"], (string)photos[i]["src"], (string)photos[i]["src_big"]);
+                        pl.Add(photoItem);
+                    }
                 }
                 this.Dispatcher.BeginInvoke(() =>
                                                 {
@@ -196,8 +205,8 @@ namespace WinPhoneApp
                                                     {
                                                         Image a = new Image()
                                                                           {
-                                                                              Width = 150,
-                                                                              Height = 150,
+                                                                              Width = 125,
+                                                                              Height = 125,
                                                                               Margin = new Thickness(8)
                                                                           };
                                                         ImageSource image = new BitmapImage(new Uri(item.Src));
@@ -210,9 +219,9 @@ namespace WinPhoneApp
 
                 //this.Dispatcher.BeginInvoke(() => { feedListBox.ItemsSource = fl; progressBar1.IsIndeterminate = false; });
             }
-            catch
+            catch(Exception ex)
             {
-                this.Dispatcher.BeginInvoke(() => { MessageBox.Show("Фото не загрузились"); progressBar1.IsIndeterminate = false; });
+                this.Dispatcher.BeginInvoke(() => { MessageBox.Show(ex.Message); progressBar1.IsIndeterminate = false; });
             }
 
 
