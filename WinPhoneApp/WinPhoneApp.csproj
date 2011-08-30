@@ -73,11 +73,18 @@
     <Compile Include="Data\Client.cs" />
     <Compile Include="Data\Feed\FeedList.cs" />
     <Compile Include="Data\Feed\FeedPhotoList.cs" />
+    <Compile Include="Data\Message\MessageItem.cs" />
     <Compile Include="Data\Photo\PhotoItem.cs" />
     <Compile Include="Data\Profile\MyProfile.cs" />
     <Compile Include="Data\UnreadToBrushConverter.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="MessagePage.xaml.cs">
+      <DependentUpon>MessagePage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="MessagesPage.xaml.cs">
+      <DependentUpon>MessagesPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="SignInPage.xaml.cs">
       <DependentUpon>SignInPage.xaml</DependentUpon>
@@ -90,6 +97,14 @@
       <Generator>MSBuild:Compile</Generator>
     </ApplicationDefinition>
     <Page Include="MainPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MessagePage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MessagesPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -111,6 +126,8 @@
     </Content>
     <Content Include="Images\appbar.check.rest.png" />
     <Content Include="Images\appbar.next.rest.png" />
+    <Content Include="Images\ApplicationBar.Delete.png" />
+    <Content Include="Images\ApplicationBar.Select.png" />
     <Content Include="SplashScreenImage.jpg" />
   </ItemGroup>
   <ItemGroup />

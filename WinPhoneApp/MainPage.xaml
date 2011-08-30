@@ -11,7 +11,7 @@
     xmlns:photos="clr-namespace:WinPhoneApp.Data.Photo"
     xmlns:myprofile="clr-namespace:WinPhoneApp.Data.Profile"
     xmlns:toolkit="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone.Controls.Toolkit"
-    mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="800"
+    mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="728"
     FontFamily="{StaticResource PhoneFontFamilyNormal}"
     FontSize="{StaticResource PhoneFontSizeNormal}"
     Foreground="{StaticResource PhoneForegroundBrush}"
@@ -81,5 +81,14 @@
 
 
     <!--Panorama-based applications should not show an ApplicationBar-->
+    <phone:PhoneApplicationPage.ApplicationBar>
+        <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True">
+            <!--<shell:ApplicationBarIconButton x:Name="appbar_button1" IconUri="/Images/appbar_button1.png" Text="Button 1"/>
+            <shell:ApplicationBarIconButton x:Name="appbar_button2" IconUri="/Images/appbar_button2.png" Text="Button 2"/>-->
+            <shell:ApplicationBar.MenuItems>
+                <shell:ApplicationBarMenuItem x:Name="menuItem1" Text="сообщения" Click="Navigate_to_MessagePage"/>
+            </shell:ApplicationBar.MenuItems>
+        </shell:ApplicationBar>
+    </phone:PhoneApplicationPage.ApplicationBar>
 
 </phone:PhoneApplicationPage>

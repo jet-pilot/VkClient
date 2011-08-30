@@ -10,7 +10,7 @@
     FontSize="{StaticResource PhoneFontSizeNormal}"
     Foreground="{StaticResource PhoneForegroundBrush}"
     SupportedOrientations="Portrait" Orientation="Portrait"
-    mc:Ignorable="d" d:DesignHeight="696" d:DesignWidth="480"
+    mc:Ignorable="d" d:DesignHeight="768" d:DesignWidth="480"
     shell:SystemTray.IsVisible="True">
 
     <!--LayoutRoot is the root grid where all page content is placed-->
@@ -28,14 +28,8 @@
         </StackPanel>
 
         <!--ContentPanel - place additional content here-->
-        <phone:WebBrowser x:Name="webBrowser" Grid.Row="1" />
-
+        <phone:WebBrowser x:Name="webBrowser" Grid.Row="1" Navigated="webBrowser1_Navigated" Navigating="webBrowser1_Navigating" />
+        <ProgressBar Height="4" HorizontalAlignment="Left" Margin="10,10,0,0" Name="progressBar1" VerticalAlignment="Top" Width="460" />
     </Grid>
-
-    <phone:PhoneApplicationPage.ApplicationBar>
-        <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True">
-            <shell:ApplicationBarIconButton IconUri="/Images/appbar.check.rest.png" Text="Button 1" Click="SignInButton_Click"/>
-        </shell:ApplicationBar>
-    </phone:PhoneApplicationPage.ApplicationBar>
 
 </phone:PhoneApplicationPage>

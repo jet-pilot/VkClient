@@ -333,5 +333,10 @@ namespace WinPhoneApp
                 this.Dispatcher.BeginInvoke(() => { MessageBox.Show(ex.Message); progressBar1.IsIndeterminate = false; });
             }
         }
+
+        private void Navigate_to_MessagePage(object sender, EventArgs e)
+        {
+            NavigationService.Navigate(new Uri("/MessagesPage.xaml", UriKind.Relative));
+        }
     }
 }

@@ -9,7 +9,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
 
-namespace PhoneToolkitSample.Data
+namespace WinPhoneApp.Data
 {
     public class UnreadToBrushConverter : IValueConverter
     {
