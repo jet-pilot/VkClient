@@ -73,10 +73,14 @@
     <Compile Include="Data\Client.cs" />
     <Compile Include="Data\Feed\FeedList.cs" />
     <Compile Include="Data\Feed\FeedPhotoList.cs" />
+    <Compile Include="Data\Friend\FriendList.cs" />
     <Compile Include="Data\Message\MessageItem.cs" />
     <Compile Include="Data\Photo\PhotoItem.cs" />
     <Compile Include="Data\Profile\MyProfile.cs" />
     <Compile Include="Data\UnreadToBrushConverter.cs" />
+    <Compile Include="FriendListPage.xaml.cs">
+      <DependentUpon>FriendListPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -96,6 +100,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </ApplicationDefinition>
+    <Page Include="FriendListPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

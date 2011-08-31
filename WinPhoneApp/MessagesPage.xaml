@@ -20,6 +20,7 @@
     <phone:PhoneApplicationPage.Resources>
         <data:UnreadToBrushConverter x:Key="UnreadToBrushConverter"/>
         <message:MessageList x:Key="MessageList"/>
+        <toolkit:ThreadDateTimeConverter x:Key="ThreadDateTimeConverter"/>
     </phone:PhoneApplicationPage.Resources>
     
     <!--LayoutRoot is the root grid where all page content is placed-->
@@ -60,7 +61,7 @@
                         <toolkit:MultiselectList.ItemInfoTemplate>
                             <DataTemplate>
                                 <Border Width="74" Margin="0,9,24,0">
-                                    <TextBlock Text="{Binding Mid}"
+                                    <TextBlock Text="{Binding Date, Converter={StaticResource ThreadDateTimeConverter}}"
                                        HorizontalAlignment="Right"/>
                                 </Border>
                             </DataTemplate>

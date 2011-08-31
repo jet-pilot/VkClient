@@ -31,7 +31,7 @@ namespace WinPhoneApp
         ApplicationBarIconButton delete;
 
         ApplicationBarMenuItem markAsRead;
-
+        
         ApplicationBarMenuItem markAsUnread;
 
         public MessagesPage()
@@ -79,18 +79,22 @@ namespace WinPhoneApp
             JArray responseArray = (JArray)o["response"];
             try
             {
-                for (int i = 1; i < responseArray.Count; i++)
+                this.Dispatcher.BeginInvoke(() =>
                 {
-                    if ((int)responseArray[i]["read_state"] == 1) { unread = false; }
-                    ml.Add(new MessageItem((int)responseArray[i]["mid"], (int)responseArray[i]["uid"], (string)responseArray[i]["title"], (string)responseArray[i]["body"], unread));
-                    this.uidlist.Add((int)responseArray[i]["uid"]);
-                }
-                ListProfileMessagesCallback();
-                this.Dispatcher.BeginInvoke(() => { this.progressBar1.IsIndeterminate = false; });
+                    for (int i = 1; i < responseArray.Count; i++)
+                    {
+                        if ((int)responseArray[i]["read_state"] == 1) { unread = false; }
+                        DateTime date = new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(Convert.ToDouble((int)responseArray[i]["date"]));
+                        ml.Add(new MessageItem((int)responseArray[i]["mid"], (int)responseArray[i]["uid"], (string)responseArray[i]["title"], (string)responseArray[i]["body"], unread, date));
+                        this.uidlist.Add((int)responseArray[i]["uid"]);
+                    }
+                    ListProfileMessagesCallback();
+                    this.progressBar1.IsIndeterminate = false;
+                });
             }
-            catch
+            catch (Exception ex)
             {
-
+                this.Dispatcher.BeginInvoke(() => { MessageBox.Show(ex.Message + " в получении сообщений"); this.progressBar1.IsIndeterminate = false; });
             }
         }
 
