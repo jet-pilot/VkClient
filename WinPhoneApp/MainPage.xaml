@@ -22,6 +22,7 @@
         <data:FeedList x:Key="FeedListData"/>
         <photos:PhotoItemList x:Key="FeedPhotoListData"/>
         <myprofile:MyProfile x:Key="MyProfileData"/>
+        <toolkit:RelativeTimeConverter x:Key="RelativeTimeConverter"/>
     </phone:PhoneApplicationPage.Resources>
 
     <!--LayoutRoot contains the root grid where all other page content is placed-->
@@ -55,12 +56,16 @@
                             <DataTemplate>
                                 <Grid Margin="0,0,0,18">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <Image Source="{Binding Avatar}" Grid.Column="0" VerticalAlignment="Top" Margin="0,10,12,0" />
+                                    <Image x:Name="photo" Source="{Binding Avatar}" Grid.Column="0" VerticalAlignment="Top" Margin="20,20,10,0" Width="50" Height="50"/>
                                     <StackPanel Grid.Column="1">
-                                        <TextBlock Text="{Binding Text}" TextWrapping="Wrap" />
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock x:Name="author" Text="{Binding Author}" Margin="0,0,0,0" TextWrapping="Wrap" FontSize="32" />
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding Date,Converter={StaticResource RelativeTimeConverter}}" TextWrapping="Wrap" FontSize="21.333" Foreground="{StaticResource PhoneSubtleBrush}"/>
+                                        <TextBlock Text="{Binding Text}" TextWrapping="Wrap" FontSize="21.333"/>
                                     </StackPanel>
                                 </Grid>
                             </DataTemplate>

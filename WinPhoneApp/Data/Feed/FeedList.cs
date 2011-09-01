@@ -18,7 +18,6 @@ namespace WinPhoneApp.Data.Feed
         public FeedList()
             : base()
         {
-
         }
     }
 
@@ -27,12 +26,24 @@ namespace WinPhoneApp.Data.Feed
         private string _author;
         private string _avatar;
         private string _text;
+        private DateTime _date;
 
-        public FeedItem(string author, string avatar, string text)
+        public DateTime Date
+        {
+            get { return _date; }
+            set
+            {
+                _date = value; 
+                NotifyPropertyChanged("Date");
+            }
+        }
+
+        public FeedItem(string author, string avatar, string text, DateTime date)
         {
             this._author = author;
             this._avatar = avatar;
             this._text = text;
+            this._date = date;
         }
 
         public string Author
