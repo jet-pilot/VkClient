@@ -61,6 +61,7 @@ namespace WinPhoneApp
                 ListProfileCallback();
 
                 ListStatusCallback();
+                //MessageSendRequest();
 
             }
         }
@@ -338,5 +339,25 @@ namespace WinPhoneApp
         {
             NavigationService.Navigate(new Uri("/MessagesPage.xaml", UriKind.Relative));
         }
+        //private void MessageSendRequest()
+        //{
+        //    string requestString = string.Format("https://api.vkontakte.ru/method/messages.send?access_token={0}&uid=9299666&message={1}", Client.Instance.Access_token.token, "Трололо");
+        //    HttpWebRequest web = (HttpWebRequest)WebRequest.Create(requestString);
+        //    web.Method = "POST";
+        //    web.ContentType = "application/x-www-form-urlencoded";
+        //    web.BeginGetResponse(new AsyncCallback(MessageSendResponce), web);
+        //    this.progressBar1.IsIndeterminate = true;
+        //}
+        //private void MessageSendResponce(IAsyncResult e)
+        //{
+        //    HttpWebRequest request = (HttpWebRequest)e.AsyncState;
+        //    HttpWebResponse response = (HttpWebResponse)request.EndGetResponse(e);
+
+        //    StreamReader responseReader = new StreamReader(response.GetResponseStream());
+
+        //    string responseStringStatus = responseReader.ReadToEnd();
+
+        //    JObject o = JObject.Parse(responseStringStatus);
+        //}
     }
 }
