@@ -23,7 +23,7 @@ namespace WinPhoneApp.Data.Message
         {
         }
 
-        
+
     }
 
     public class MessageItem : INotifyPropertyChanged
@@ -34,6 +34,17 @@ namespace WinPhoneApp.Data.Message
         private string _body;
         private bool _unread;
         private string _name;
+        private DateTime _date;
+
+        public DateTime Date
+        {
+            get { return _date; }
+            set
+            {
+                _date = value;
+                NotifyPropertyChanged("Date");
+            }
+        }
 
         public string Name
         {
@@ -45,13 +56,14 @@ namespace WinPhoneApp.Data.Message
         {
         }
 
-        public MessageItem(int mid, int uid, string title, string body, bool unread)
+        public MessageItem(int mid, int uid, string title, string body, bool unread, DateTime date)
         {
             this._mid = mid;
             this._uid = uid;
             this._title = title;
             this._body = body;
             this._unread = unread;
+            this._date = date;
         }
 
         public bool Unread

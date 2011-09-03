@@ -91,7 +91,7 @@ namespace WinPhoneApp
 
         private void ListFeedsCallback()
         {
-            HttpWebRequest web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/newsfeed.get.xml?uid={0}&filters=post&count=20&access_token={1}", Client.Instance.Access_token.uid, Client.Instance.Access_token.token));
+            HttpWebRequest web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/newsfeed.get?uid={0}&filters=post&count=20&access_token={1}", Client.Instance.Access_token.uid, Client.Instance.Access_token.token));
             web.Method = "POST";
             web.ContentType = "application/x-www-form-urlencoded";
             web.BeginGetResponse(new AsyncCallback(ResponsePrepare), web);
@@ -107,33 +107,65 @@ namespace WinPhoneApp
 
             string responseStringfeed = responseReader.ReadToEnd();
 
-            XElement xmlFeeds = XElement.Parse(responseStringfeed);
-
+            JObject o = JObject.Parse(responseStringfeed);
+            JArray responseFeeds = (JArray)o["response"]["items"];
+            JArray responseProfiles = (JArray)o["response"]["profiles"];
             try
             {
-                XElement newxmlFeeds = new XElement("posts",
-                from item in xmlFeeds.Element("items").Elements("item")
-                join profile in xmlFeeds.Element("profiles").Elements("user")
-                on (string)item.Element("source_id") equals (string)profile.Element("uid")
-                select new XElement("feed",
-                    new XElement("author", profile.Element("first_name").Value + " " + profile.Element("last_name").Value),
-                    new XElement("avatar", profile.Element("photo").Value),
-                    new XElement("text", item.Element("text").Value)
-                    )
-                    );
-
-                var items = from feed in newxmlFeeds.Descendants("feed")
-                            select new FeedItem(feed.Element("author").Value, feed.Element("avatar").Value, feed.Element("text").Value);
-                foreach (var item in items)
+                foreach (var item in responseFeeds)
                 {
-                    fl.Add(item);
+                    DateTime date = new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(Convert.ToDouble((int)item["date"]));
+                    foreach (var user in responseProfiles)
+                    {
+                        if ((int)user["uid"] == (int)item["source_id"])
+                        {
+                            string name = (string)user["first_name"] + " " + (string)user["last_name"];
+                            string avatar = (string)user["photo"];
+                            fl.Add(new FeedItem(name, avatar, (string)item["text"], date));
+                        }
+                    }
                 }
-                this.Dispatcher.BeginInvoke(() => { feedListBox.ItemsSource = fl; progressBar1.IsIndeterminate = false; });
+                this.Dispatcher.BeginInvoke(() =>
+                    {
+                        feedListBox.ItemsSource = fl;
+                        progressBar1.IsIndeterminate = false;
+                    });
             }
             catch
             {
                 this.Dispatcher.BeginInvoke(() => { MessageBox.Show("Новости не загрузились"); progressBar1.IsIndeterminate = false; });
             }
+
+            #region старый вариант с xml
+            //XElement xmlFeeds = XElement.Parse(responseStringfeed);
+
+            //try
+            //{
+            //    XElement newxmlFeeds = new XElement("posts",
+            //    from item in xmlFeeds.Element("items").Elements("item")
+            //    join profile in xmlFeeds.Element("profiles").Elements("user")
+            //    on (string)item.Element("source_id") equals (string)profile.Element("uid")
+            //    select new XElement("feed",
+            //        new XElement("author", profile.Element("first_name").Value + " " + profile.Element("last_name").Value),
+            //        new XElement("avatar", profile.Element("photo").Value),
+            //        new XElement("text", item.Element("text").Value),
+            //        new XElement("date",item.Element("date").Value)
+            //        )
+            //        );
+
+            //    var items = from feed in newxmlFeeds.Descendants("feed")
+            //                select new FeedItem(feed.Element("author").Value, feed.Element("avatar").Value, feed.Element("text").Value, new DateTime(1970, 1, 1, 0, 0, 0));
+            //    foreach (var item in items)
+            //    {
+            //        fl.Add(item);
+            //    }
+            //    this.Dispatcher.BeginInvoke(() => { feedListBox.ItemsSource = fl; progressBar1.IsIndeterminate = false; });
+            //}
+            //catch
+            //{
+            //    this.Dispatcher.BeginInvoke(() => { MessageBox.Show("Новости не загрузились"); progressBar1.IsIndeterminate = false; });
+            //}
+            #endregion
 
 
         }
@@ -220,7 +252,7 @@ namespace WinPhoneApp
 
                 //this.Dispatcher.BeginInvoke(() => { feedListBox.ItemsSource = fl; progressBar1.IsIndeterminate = false; });
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 this.Dispatcher.BeginInvoke(() => { MessageBox.Show(ex.Message); progressBar1.IsIndeterminate = false; });
             }
