@@ -51,7 +51,6 @@
     <Reference Include="Microsoft.Phone" />
     <Reference Include="Microsoft.Phone.Controls, Version=7.0.0.0, Culture=neutral, PublicKeyToken=24eec0d8c86cda1e, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.Phone.Controls.Toolkit, Version=7.0.0.0, Culture=neutral, PublicKeyToken=b772ad94eb9ca604, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.Phone.Interop" />
     <Reference Include="Newtonsoft.Json.WindowsPhone">
       <HintPath>Json\Newtonsoft.Json.WindowsPhone.dll</HintPath>
     </Reference>
@@ -59,8 +58,6 @@
     <Reference Include="system" />
     <Reference Include="System.Core" />
     <Reference Include="System.Net" />
-    <Reference Include="System.Xml" />
-    <Reference Include="mscorlib.extensions" />
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>

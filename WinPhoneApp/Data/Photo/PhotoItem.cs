@@ -30,6 +30,15 @@ namespace WinPhoneApp.Data.Photo
         private string _src;
         private string _src_big;
 
+
+        public PhotoItem(int pid,int owner_id,string src,string src_big)
+        {
+            this._pid = pid;
+            this._owner_id = owner_id;
+            this._src = src;
+            this._src_big = src_big;
+        }
+
         public PhotoItem(int pid, int owner_id, int aid, string src, string src_big)
         {
             this._pid = pid;
