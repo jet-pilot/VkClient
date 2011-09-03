@@ -8,10 +8,11 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
+using System.ComponentModel;
 
 namespace WinPhoneApp.Data.Profile
 {
-    public class MyProfile
+    public class MyProfile : INotifyPropertyChanged
     {
         private int _uid;
         private string _first_name;
@@ -49,13 +50,13 @@ namespace WinPhoneApp.Data.Profile
         public string First_name
         {
             get { return _first_name; }
-            set { _first_name = value; }
+            set { _first_name = value; NotifyPropertyChanged("First_name"); }
         }
 
         public string Last_name
         {
             get { return _last_name; }
-            set { _last_name = value; }
+            set { _last_name = value; NotifyPropertyChanged("Last_name"); }
         }
 
         public string Nickname
@@ -97,7 +98,7 @@ namespace WinPhoneApp.Data.Profile
         public string Photo
         {
             get { return _photo; }
-            set { _photo = value; }
+            set { _photo = value; NotifyPropertyChanged("Photo"); }
         }
 
         public string Photo_medium
@@ -129,5 +130,21 @@ namespace WinPhoneApp.Data.Profile
             get { return _mobile_phone; }
             set { _mobile_phone = value; }
         }
+
+        private void NotifyPropertyChanged(String info)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(info));
+            }
+        }
+
+
+        #region INotifyPropertyChanged Members
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        #endregion
+
     }
 }

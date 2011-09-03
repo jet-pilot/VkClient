@@ -20,7 +20,6 @@
 
     <phone:PhoneApplicationPage.Resources>
         <data:FeedList x:Key="FeedListData"/>
-        <photos:PhotoItemList x:Key="FeedPhotoListData"/>
         <myprofile:MyProfile x:Key="MyProfileData"/>
         <toolkit:RelativeTimeConverter x:Key="RelativeTimeConverter"/>
     </phone:PhoneApplicationPage.Resources>
@@ -73,13 +72,7 @@
                     </ListBox>
                 </Grid>
             </controls:PanoramaItem>
-            <controls:PanoramaItem Header="фото" Orientation="Horizontal">
-                <Grid x:Name="FeedPhotoPanel"  DataContext="{Binding Source={StaticResource FeedPhotoListData}}">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" Width="480" Height="800">
-                        <toolkit:WrapPanel x:Name="wrapPanel" Orientation="Horizontal"/>
-                    </ScrollViewer>
-                </Grid>
-            </controls:PanoramaItem>
+            
         </controls:Panorama>
         <ProgressBar Height="4" HorizontalAlignment="Left" Margin="10,10,0,0" Name="progressBar1" VerticalAlignment="Top" Width="460" />
     </Grid>
@@ -92,6 +85,7 @@
             <shell:ApplicationBarIconButton x:Name="appbar_button2" IconUri="/Images/appbar_button2.png" Text="Button 2"/>-->
             <shell:ApplicationBar.MenuItems>
                 <shell:ApplicationBarMenuItem x:Name="menuItem1" Text="сообщения" Click="Navigate_to_MessagePage"/>
+                <shell:ApplicationBarMenuItem x:Name="menuItem2" Text="друзья" Click="Navigate_to_FriendListPage"/>
             </shell:ApplicationBar.MenuItems>
         </shell:ApplicationBar>
     </phone:PhoneApplicationPage.ApplicationBar>
