@@ -352,7 +352,6 @@ namespace WinPhoneApp
 
             }
         }
-
         #endregion
     }
 }
