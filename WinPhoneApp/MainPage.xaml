@@ -18,16 +18,73 @@
     SupportedOrientations="PortraitOrLandscape"  Orientation="Portrait"
     shell:SystemTray.IsVisible="False">
 
+    <toolkit:TransitionService.NavigationInTransition>
+        <toolkit:NavigationInTransition>
+            <toolkit:NavigationInTransition.Backward>
+                <toolkit:TurnstileTransition Mode="BackwardIn"/>
+            </toolkit:NavigationInTransition.Backward>
+            <toolkit:NavigationInTransition.Forward>
+                <toolkit:TurnstileTransition Mode="ForwardIn"/>
+            </toolkit:NavigationInTransition.Forward>
+        </toolkit:NavigationInTransition>
+    </toolkit:TransitionService.NavigationInTransition>
+    <toolkit:TransitionService.NavigationOutTransition>
+        <toolkit:NavigationOutTransition>
+            <toolkit:NavigationOutTransition.Backward>
+                <toolkit:TurnstileTransition Mode="BackwardOut"/>
+            </toolkit:NavigationOutTransition.Backward>
+            <toolkit:NavigationOutTransition.Forward>
+                <toolkit:TurnstileTransition Mode="ForwardOut"/>
+            </toolkit:NavigationOutTransition.Forward>
+        </toolkit:NavigationOutTransition>
+    </toolkit:TransitionService.NavigationOutTransition>
+
     <phone:PhoneApplicationPage.Resources>
         <data:FeedList x:Key="FeedListData"/>
-        <myprofile:MyProfile x:Key="MyProfileData"/>
         <toolkit:RelativeTimeConverter x:Key="RelativeTimeConverter"/>
+        <DataTemplate x:Name="images">
+            <StackPanel Orientation="Horizontal">
+                <Image Source="{Binding Src}" Stretch="None" />
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Name="links">
+            <StackPanel>
+                <HyperlinkButton Content="{Binding Title}" NavigateUri="{Binding Url}"  Click="HyperlinkButton_Click" Cursor="Hand" />
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Name="audios">
+            <StackPanel>
+                <MediaElement Source="{Binding Url}"/>
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Name="FeedListItem">
+            <Grid Margin="0,0,0,18">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Image x:Name="photo" Source="{Binding Avatar}" Grid.Column="0" VerticalAlignment="Top" Margin="20,20,10,0" Width="50" Height="50"/>
+                <StackPanel Grid.Column="1">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock x:Name="author" Text="{Binding Author}" Margin="0,0,0,0" TextWrapping="Wrap" FontSize="32" />
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Text="{Binding Date,Converter={StaticResource RelativeTimeConverter}}" TextWrapping="Wrap" FontSize="21.333" Foreground="{StaticResource PhoneSubtleBrush}"/>
+                        <TextBlock Text="{Binding Text}" TextWrapping="Wrap" FontSize="21.333"/>
+                        <ItemsControl ItemTemplate="{StaticResource images}" ItemsSource="{Binding Image}"/>
+                        <ItemsControl ItemTemplate="{StaticResource links}" ItemsSource="{Binding Link}"/>
+                        <ItemsControl ItemTemplate="{StaticResource audios}" ItemsSource="{Binding Audio}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+        <myprofile:MyProfile x:Key="MyProfileData"/>
     </phone:PhoneApplicationPage.Resources>
 
     <!--LayoutRoot contains the root grid where all other page content is placed-->
     <Grid x:Name="LayoutRoot">
         <controls:Panorama>
-
             <!--Panorama item one-->
             <controls:PanoramaItem Header="профиль">
                 <Grid x:Name="MyProfilePanel" DataContext="{Binding Source={StaticResource MyProfileData}}">
@@ -50,29 +107,11 @@
             <!--Panorama item two-->
             <controls:PanoramaItem Header="новости">
                 <Grid x:Name="FeedPanel"  DataContext="{Binding Source={StaticResource FeedListData}}">
-                    <ListBox x:Name="feedListBox" ItemsSource="{Binding}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Grid Margin="0,0,0,18">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Image x:Name="photo" Source="{Binding Avatar}" Grid.Column="0" VerticalAlignment="Top" Margin="20,20,10,0" Width="50" Height="50"/>
-                                    <StackPanel Grid.Column="1">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock x:Name="author" Text="{Binding Author}" Margin="0,0,0,0" TextWrapping="Wrap" FontSize="32" />
-                                        </StackPanel>
-                                        <TextBlock Text="{Binding Date,Converter={StaticResource RelativeTimeConverter}}" TextWrapping="Wrap" FontSize="21.333" Foreground="{StaticResource PhoneSubtleBrush}"/>
-                                        <TextBlock Text="{Binding Text}" TextWrapping="Wrap" FontSize="21.333"/>
-                                    </StackPanel>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
+                    <ListBox x:Name="feedListBox" ItemTemplate="{StaticResource FeedListItem}">
                     </ListBox>
                 </Grid>
             </controls:PanoramaItem>
-            
+
         </controls:Panorama>
         <ProgressBar Height="4" HorizontalAlignment="Left" Margin="10,10,0,0" Name="progressBar1" VerticalAlignment="Top" Width="460" />
     </Grid>
@@ -80,9 +119,7 @@
 
     <!--Panorama-based applications should not show an ApplicationBar-->
     <phone:PhoneApplicationPage.ApplicationBar>
-        <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True">
-            <!--<shell:ApplicationBarIconButton x:Name="appbar_button1" IconUri="/Images/appbar_button1.png" Text="Button 1"/>
-            <shell:ApplicationBarIconButton x:Name="appbar_button2" IconUri="/Images/appbar_button2.png" Text="Button 2"/>-->
+        <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True" Mode="Minimized">
             <shell:ApplicationBar.MenuItems>
                 <shell:ApplicationBarMenuItem x:Name="menuItem1" Text="сообщения" Click="Navigate_to_MessagePage"/>
                 <shell:ApplicationBarMenuItem x:Name="menuItem2" Text="друзья" Click="Navigate_to_FriendListPage"/>

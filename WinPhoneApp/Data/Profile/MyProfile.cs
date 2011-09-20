@@ -41,6 +41,15 @@ namespace WinPhoneApp.Data.Profile
             this._photo = photo;
         }
 
+        public MyProfile(string first_name, string last_name, string photo, string mobile_phone, string home_phone)
+        {
+            this._first_name = first_name;
+            this._last_name = last_name;
+            this._photo = photo;
+            this._mobile_phone = mobile_phone;
+            this._home_phone = home_phone;
+        }
+
         public int Uid
         {
             get { return _uid; }

@@ -11,6 +11,8 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 
+using WinPhoneApp.Data.Photo;
+
 namespace WinPhoneApp.Data.Feed
 {
     public class FeedList : ObservableCollection<FeedItem>
@@ -27,17 +29,50 @@ namespace WinPhoneApp.Data.Feed
         private string _avatar;
         private string _text;
         private DateTime _date;
+        private PhotoItemList _image;
+        private LinkItemList _link;
+        private AudioItemList _audio;
+
+        public AudioItemList Audio
+        {
+            get { return _audio; }
+            set
+            {
+                _audio = value;
+                NotifyPropertyChanged("Audio");
+            }
+        }
+
+        public LinkItemList Link
+        {
+            get { return _link; }
+            set
+            {
+                _link = value;
+                NotifyPropertyChanged("Link");
+            }
+        }
+
+        public PhotoItemList Image
+        {
+            get { return _image; }
+            set
+            {
+                _image = value;
+                NotifyPropertyChanged("Image");
+            }
+        }
 
         public DateTime Date
         {
             get { return _date; }
             set
             {
-                _date = value; 
+                _date = value;
                 NotifyPropertyChanged("Date");
             }
         }
-
+        /*Конструктор для поста без аттача*/
         public FeedItem(string author, string avatar, string text, DateTime date)
         {
             this._author = author;
@@ -45,7 +80,17 @@ namespace WinPhoneApp.Data.Feed
             this._text = text;
             this._date = date;
         }
-
+        /*Конструктор для поста с аттачем*/
+        public FeedItem(string author, string avatar, string text, DateTime date, PhotoItemList image, LinkItemList link, AudioItemList audio)
+        {
+            this._author = author;
+            this._avatar = avatar;
+            this._text = text;
+            this._date = date;
+            this._image = image;
+            this._link = link;
+            this._audio = audio;
+        }
         public string Author
         {
             get { return _author; }

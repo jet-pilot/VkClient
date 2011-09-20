@@ -35,6 +35,17 @@ namespace WinPhoneApp.Data.Message
         private bool _unread;
         private string _name;
         private DateTime _date;
+        private string _avatar;
+
+        public string Avatar
+        {
+            get { return _avatar; }
+            set
+            {
+                _avatar = value;
+                NotifyPropertyChanged("Avatar");
+            }
+        }
 
         public DateTime Date
         {

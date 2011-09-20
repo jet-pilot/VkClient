@@ -10,25 +10,27 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using Microsoft.Phone.Controls;
-using WinPhoneApp.Data.Friend;
-using WinPhoneApp.Data;
 using System.IO;
 using Newtonsoft.Json.Linq;
+using WinPhoneApp.Data.Friend;
 using WinPhoneApp.Data.Profile;
+using WinPhoneApp.Data;
 
 namespace WinPhoneApp
 {
-    public partial class FriendListPage : PhoneApplicationPage
+    public partial class SearchFriend : PhoneApplicationPage
     {
-        private FriendList fl = new FriendList();
-        private FriendList ofl = new FriendList();
-
-        public FriendListPage()
+        private FriendList sfl = new FriendList();
+        private FriendList el = new FriendList();
+        public SearchFriend()
         {
             InitializeComponent();
-            ListFriendsCallback();
         }
 
+        private void Search_Action(object sender, EventArgs e)
+        {
+            ListFriendsCallback();
+        }
 
         private void ListFriendsCallback()
         {
@@ -48,35 +50,25 @@ namespace WinPhoneApp
 
             string responseStringfeed = responseReader.ReadToEnd();
 
-            
+
             try
             {
                 JObject o = JObject.Parse(responseStringfeed);
                 JArray responseFriends = (JArray)o["response"];
                 foreach (var item in responseFriends)
                 {
-                    fl.Add(new MyProfile((string)item["first_name"], (string)item["last_name"], (string)item["photo"]));
-                    if ((int)item["online"] == 1) { ofl.Add(new MyProfile((string)item["first_name"], (string)item["last_name"], (string)item["photo"])); }
+                    sfl.Add(new MyProfile((string)item["first_name"], (string)item["last_name"], (string)item["photo"]));
                 }
                 this.Dispatcher.BeginInvoke(() =>
-                    {
-                        Friends.ItemsSource = fl;
-                        FriendsPanel.Header += "(" + fl.Count + ")";
-                        OnlineFriends.ItemsSource = ofl;
-                        OnLineFriendsPanel.Header += "(" + ofl.Count + ")";
-                        progressBar1.IsIndeterminate = false;
-                    });
+                {
+                    Friends.ItemsSource = sfl;
+                    progressBar1.IsIndeterminate = false;
+                });
             }
             catch
             {
                 this.Dispatcher.BeginInvoke(() => { MessageBox.Show("Друзья не загрузились"); progressBar1.IsIndeterminate = false; });
             }
         }
-
-        private void Navigate_to_Search(object sender, EventArgs e)
-        {
-            NavigationService.Navigate(new Uri("/SearchFriend.xaml", UriKind.Relative));
-        }
-
     }
 }

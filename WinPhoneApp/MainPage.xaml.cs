@@ -18,13 +18,14 @@ using WinPhoneApp.Data.Photo;
 using WinPhoneApp.Data;
 using Newtonsoft.Json.Linq;
 using WinPhoneApp.Data.Profile;
+using System.ComponentModel;
+using Microsoft.Phone.Tasks;
 
 namespace WinPhoneApp
 {
     public partial class MainPage : PhoneApplicationPage
     {
-        private FeedList fl = new FeedList();
-        private PhotoItemList pl = new PhotoItemList();
+        private FeedList fl;
         private MyProfile mp;
 
         public MainPage()
@@ -36,7 +37,6 @@ namespace WinPhoneApp
         private void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
             Client.Instance.ActiveChanged += new EventHandler(ClientActiveChanged);
-
             this.UpdateUI();
         }
 
@@ -52,34 +52,22 @@ namespace WinPhoneApp
             else
             {
                 GetFeedList();
-                ListFeedsCallback();
-
                 GetMyProfile();
-                ListProfileCallback();
-
-                ListStatusCallback();
-
             }
         }
 
         private FeedList GetFeedList()
         {
-            var tmp = (FeedList)this.Resources["FeedListData"];
-            if (tmp != null)
+            if (fl != null)
             {
-                return tmp;
+                return fl;
             }
             else
             {
-                if (fl != null)
-                {
-                    return fl;
-                }
-                else
-                {
-                    FeedPanel.DataContext = fl;
-                    return fl;
-                }
+                fl = new FeedList();
+                ListFeedsCallback();
+                //FeedPanel.DataContext = fl;
+                return fl;
             }
         }
 
@@ -103,30 +91,77 @@ namespace WinPhoneApp
 
             string responseStringfeed = responseReader.ReadToEnd();
 
-            JObject o = JObject.Parse(responseStringfeed);
-            JArray responseFeeds = (JArray)o["response"]["items"];
-            JArray responseProfiles = (JArray)o["response"]["profiles"];
             try
             {
+                JObject o = JObject.Parse(responseStringfeed);
+                JArray responseFeeds = (JArray)o["response"]["items"];
+                JArray responseProfiles = (JArray)o["response"]["profiles"];
                 foreach (var item in responseFeeds)
                 {
                     DateTime date = new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(Convert.ToDouble((int)item["date"]));
+                    PhotoItemList pl = new PhotoItemList();
+                    LinkItemList ll = new LinkItemList();
+                    AudioItemList al = new AudioItemList();
                     foreach (var user in responseProfiles)
                     {
+                        var attachments = item.SelectToken("attachments", false);
                         if ((int)user["uid"] == (int)item["source_id"])
                         {
                             string name = (string)user["first_name"] + " " + (string)user["last_name"];
                             string avatar = (string)user["photo"];
-                            fl.Add(new FeedItem(name, avatar, (string)item["text"], date));
+                            if (attachments != null)
+                            {
+                                foreach (var attachment in attachments)
+                                {
+                                    switch ((string)attachment["type"])
+                                    {
+                                        case "photo":
+                                            {
+                                                var image = attachment.SelectToken("photo", false);
+                                                if (image != null)
+                                                {
+                                                    pl.Add(new PhotoItem((int)image["pid"], (int)image["owner_id"], (string)image["src"], (string)image["src_big"]));
+                                                }
+
+                                                break;
+                                            }
+                                        case "link":
+                                            {
+                                                var link = attachment.SelectToken("link", false);
+                                                if (link != null)
+                                                {
+                                                    ll.Add(new LinkItem((string)link["url"], (string)link["title"], (string)link["description"], (string)link["image_src"]));
+                                                }
+                                                break;
+                                            }
+                                        case "audio":
+                                            {
+                                                var audio = attachment.SelectToken("audio", false);
+                                                if (audio != null)
+                                                {
+                                                    al.Add(new AudioItem());
+                                                }
+                                                break;
+                                            }
+                                    }
+                                }
+                                fl.Add(new FeedItem(name, avatar, (string)item["text"], date, pl, ll, al));
+                            }
+                            else
+                            {
+                                fl.Add(new FeedItem(name, avatar, (string)item["text"], date));
+                            }
+
                         }
                     }
                 }
                 this.Dispatcher.BeginInvoke(() =>
-                    {
-                        feedListBox.ItemsSource = fl;
-                        progressBar1.IsIndeterminate = false;
-                        
-                    });
+                {
+                    feedListBox.ItemsSource = fl;
+
+                    progressBar1.IsIndeterminate = false;
+
+                });
             }
             catch
             {
@@ -166,31 +201,23 @@ namespace WinPhoneApp
 
 
         }
-
         #endregion
-
-        
 
         private MyProfile GetMyProfile()
         {
-            var tmp = (MyProfile)this.Resources["MyProfileData"];
-            if (tmp != null)
+            if (mp != null)
             {
-                return tmp;
+                return mp;
             }
             else
             {
-                if (mp != null)
-                {
-                    return mp;
-                }
-                else
-                {
-                    mp = new MyProfile();
-                    MyProfilePanel.DataContext = mp;
-                    return mp;
-                }
+                mp = new MyProfile();
+                ListProfileCallback();
+                ListStatusCallback();
+                //MyProfilePanel.DataContext = mp;
+                return mp;
             }
+
         }
 
         #region получаем профиль
@@ -277,6 +304,23 @@ namespace WinPhoneApp
         private void Navigate_to_FriendListPage(object sender, EventArgs e)
         {
             NavigationService.Navigate(new Uri("/FriendListPage.xaml", UriKind.Relative));
+        }
+
+        protected override void OnBackKeyPress(CancelEventArgs e)
+        {
+            base.OnBackKeyPress(e);
+            if (MessageBox.Show("Вы действительно хотите выйти из приложения?", "выйти", MessageBoxButton.OKCancel) == MessageBoxResult.Cancel)
+            {
+                e.Cancel = true;
+            }
+        }
+
+        private void HyperlinkButton_Click(object sender, RoutedEventArgs e)
+        {
+            var wbt = new WebBrowserTask();
+            HyperlinkButton btn = (HyperlinkButton)e.OriginalSource;
+            wbt.Uri = btn.NavigateUri;
+            wbt.Show();
         }
     }
 }

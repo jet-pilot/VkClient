@@ -14,12 +14,13 @@ using WinPhoneApp.Data.Message;
 using System.IO;
 using WinPhoneApp.Data;
 using Newtonsoft.Json.Linq;
+using System.Windows.Media.Imaging;
 
 namespace WinPhoneApp
 {
     public partial class MessagePage : PhoneApplicationPage
     {
-        private MessageItem message = new MessageItem();
+        private MessageItem message;
         public MessagePage()
         {
             InitializeComponent();
@@ -32,8 +33,11 @@ namespace WinPhoneApp
             string mid = "";
 
             if (NavigationContext.QueryString.TryGetValue("mid", out mid))
-
-            { message.Mid = Convert.ToInt32(mid); ListMessagesCallback(); }
+            {
+                message = new MessageItem();
+                message.Mid = Convert.ToInt32(mid);
+                ListMessagesCallback();
+            }
         }
 
 
@@ -64,6 +68,7 @@ namespace WinPhoneApp
                         this.message.Uid = (int)responseArray[1]["uid"];
                         this.message.Title = (string)responseArray[1]["title"];
                         this.message.Body = (string)responseArray[1]["body"];
+                        this.message.Date = new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(Convert.ToDouble((int)responseArray[1]["date"]));
                         ProfileCallback();
                         this.progressBar1.IsIndeterminate = false;
                     });
@@ -80,7 +85,7 @@ namespace WinPhoneApp
 
         private void ProfileCallback()
         {
-            string requestString = string.Format("https://api.vkontakte.ru/method/getProfiles?access_token={0}&uid={1}", Client.Instance.Access_token.token, message.Uid);
+            string requestString = string.Format("https://api.vkontakte.ru/method/getProfiles?fields=photo&access_token={0}&uid={1}", Client.Instance.Access_token.token, message.Uid);
             HttpWebRequest web = (HttpWebRequest)WebRequest.Create(requestString);
             web.Method = "POST";
             web.ContentType = "application/x-www-form-urlencoded";
@@ -95,17 +100,19 @@ namespace WinPhoneApp
             StreamReader responseReader = new StreamReader(response.GetResponseStream());
 
             string responseStringStatus = responseReader.ReadToEnd();
-
-            JObject o = JObject.Parse(responseStringStatus);
-            JArray responseArray = (JArray)o["response"];
             try
             {
+                JObject o = JObject.Parse(responseStringStatus);
+                JArray responseArray = (JArray)o["response"];
                 this.Dispatcher.BeginInvoke(() =>
                 {
                     this.message.Name = (string)responseArray[0]["first_name"] + " " + (string)responseArray[0]["last_name"];
+                    ImageSource image = new BitmapImage(new Uri((string)responseArray[0]["photo"]));
+                    this.avatar.Source = image;
                     this.name.Text = message.Name;
                     this.title.Text = message.Title;
                     this.body.Text = message.Body;
+                    this.date.Text = message.Date.ToLocalTime().ToString();
                     this.progressBar1.IsIndeterminate = false;
                 });
             }
@@ -116,6 +123,11 @@ namespace WinPhoneApp
                     MessageBox.Show(ex.Message);
                 });
             }
+        }
+
+        private void ReplyToTheMessage(object sender, EventArgs e)
+        {
+            NavigationService.Navigate(new Uri("/SendMessage.xaml?uid=" + message.Uid, UriKind.Relative));
         }
 
     }

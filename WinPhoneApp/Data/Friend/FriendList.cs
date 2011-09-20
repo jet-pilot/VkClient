@@ -14,7 +14,7 @@ using System.Collections.Generic;
 
 namespace WinPhoneApp.Data.Friend
 {
-    public class FriendList : ObservableCollection<MyProfile>
+    public class FriendList : List<MyProfile>
     {
         public FriendList()
             : base()

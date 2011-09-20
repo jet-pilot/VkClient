@@ -9,29 +9,70 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:toolkit="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone.Controls.Toolkit"
     xmlns:friends="clr-namespace:WinPhoneApp.Data.Friend"
-    mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="768"
+    mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="696"
     FontFamily="{StaticResource PhoneFontFamilyNormal}"
     FontSize="{StaticResource PhoneFontSizeNormal}"
     Foreground="{StaticResource PhoneForegroundBrush}"
     SupportedOrientations="Portrait"  Orientation="Portrait"
     shell:SystemTray.IsVisible="True">
-    
+
+    <toolkit:TransitionService.NavigationInTransition>
+        <toolkit:NavigationInTransition>
+            <toolkit:NavigationInTransition.Forward>
+                <toolkit:TurnstileTransition Mode="ForwardIn"/>
+            </toolkit:NavigationInTransition.Forward>
+        </toolkit:NavigationInTransition>
+    </toolkit:TransitionService.NavigationInTransition>
+
+    <phone:PhoneApplicationPage.Resources>
+        <friends:FriendList x:Key="FriendsListData"/>
+        
+        <DataTemplate x:Key="friendsItemTemplate">
+            <Grid Margin="12,8,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Image Width="70" Height="70" Source="{Binding Photo}" Grid.Column="0" VerticalAlignment="Top"/>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding First_name}" Style="{StaticResource PhoneTextLargeStyle}" FontFamily="{StaticResource PhoneFontFamilyNormal}" Margin="12,-12,12,6"/>
+                        <TextBlock Text="{Binding Last_name}" Style="{StaticResource PhoneTextLargeStyle}" FontFamily="{StaticResource PhoneFontFamilyNormal}" Margin="12,-12,12,6"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+    </phone:PhoneApplicationPage.Resources>
+
     <!--LayoutRoot is the root grid where all page content is placed-->
     <Grid x:Name="LayoutRoot" Background="Transparent">
         <!--Pivot Control-->
         <controls:Pivot Title="ДРУЗЬЯ">
             <!--Pivot item one-->
-            <controls:PivotItem Header="все">
-                
+            <controls:PivotItem x:Name="FriendsPanel" Header="все" DataContext="{Binding Source={StaticResource FriendsListData}}">
+
+                <Grid Grid.Row="1" Margin="12,0,12,0">
+                    <toolkit:LongListSelector x:Name="Friends" IsFlatList="True"
+                                      ItemTemplate="{StaticResource friendsItemTemplate}"/>
+                </Grid>
             </controls:PivotItem>
 
             <!--Pivot item two-->
-            <controls:PivotItem Header="он-лайн">
-                <Grid/>
+            <controls:PivotItem x:Name="OnLineFriendsPanel" Header="он-лайн" DataContext="{Binding Source={StaticResource FriendsListData}}">
+                <Grid Grid.Row="1" Margin="12,0,12,0">
+                    <toolkit:LongListSelector x:Name="OnlineFriends" IsFlatList="True"
+                                      ItemTemplate="{StaticResource friendsItemTemplate}"/>
+                </Grid>
             </controls:PivotItem>
         </controls:Pivot>
         <ProgressBar Height="4" HorizontalAlignment="Left" Margin="10,10,0,0" Name="progressBar1" VerticalAlignment="Top" Width="460" />
     </Grid>
 
-    
+    <phone:PhoneApplicationPage.ApplicationBar>
+        <shell:ApplicationBar IsVisible="True" IsMenuEnabled="False">
+            <shell:ApplicationBarIconButton x:Name="appbar_search" IconUri="/Images/appbar.feature.search.rest.png" Text="поиск" Click="Navigate_to_Search"/>
+        </shell:ApplicationBar>
+    </phone:PhoneApplicationPage.ApplicationBar>
+
+
 </phone:PhoneApplicationPage>

@@ -51,6 +51,7 @@
     <Reference Include="Microsoft.Phone" />
     <Reference Include="Microsoft.Phone.Controls, Version=7.0.0.0, Culture=neutral, PublicKeyToken=24eec0d8c86cda1e, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.Phone.Controls.Toolkit, Version=7.0.0.0, Culture=neutral, PublicKeyToken=b772ad94eb9ca604, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.Phone.Interop" />
     <Reference Include="Newtonsoft.Json.WindowsPhone">
       <HintPath>Json\Newtonsoft.Json.WindowsPhone.dll</HintPath>
     </Reference>
@@ -64,6 +65,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Data\AudioItem.cs" />
     <Compile Include="Data\Auth\AccessInfoBag.cs" />
     <Compile Include="Data\Auth\AccessInfoStore.cs" />
     <Compile Include="Data\Auth\AuthorizeInfo.cs" />
@@ -71,6 +73,7 @@
     <Compile Include="Data\Feed\FeedList.cs" />
     <Compile Include="Data\Feed\FeedPhotoList.cs" />
     <Compile Include="Data\Friend\FriendList.cs" />
+    <Compile Include="Data\LinkItem.cs" />
     <Compile Include="Data\Message\MessageItem.cs" />
     <Compile Include="Data\Photo\PhotoItem.cs" />
     <Compile Include="Data\Profile\MyProfile.cs" />
@@ -86,6 +89,12 @@
     </Compile>
     <Compile Include="MessagesPage.xaml.cs">
       <DependentUpon>MessagesPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SearchFriend.xaml.cs">
+      <DependentUpon>SearchFriend.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SendMessage.xaml.cs">
+      <DependentUpon>SendMessage.xaml</DependentUpon>
     </Compile>
     <Compile Include="SignInPage.xaml.cs">
       <DependentUpon>SignInPage.xaml</DependentUpon>
@@ -113,6 +122,14 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="SearchFriend.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SendMessage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="SignInPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -130,9 +147,13 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Images\appbar.check.rest.png" />
+    <Content Include="Images\appbar.feature.email.rest.png" />
+    <Content Include="Images\appbar.feature.search.rest.png" />
     <Content Include="Images\appbar.next.rest.png" />
     <Content Include="Images\ApplicationBar.Delete.png" />
     <Content Include="Images\ApplicationBar.Select.png" />
+    <Resource Include="Images\MainBackground.jpg" />
+    <Content Include="Images\Search.png" />
     <Content Include="SplashScreenImage.jpg" />
   </ItemGroup>
   <ItemGroup />

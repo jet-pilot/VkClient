@@ -60,7 +60,7 @@ namespace WinPhoneApp
 
         private void ListMessagesCallback()
         {
-            HttpWebRequest web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/messages.get?filters=4&preview_length=15&count=20&access_token={0}", Client.Instance.Access_token.token));
+            HttpWebRequest web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/messages.get?preview_length=15&count=50&access_token={0}", Client.Instance.Access_token.token));
             web.Method = "POST";
             web.ContentType = "application/x-www-form-urlencoded";
             web.BeginGetResponse(new AsyncCallback(ResponcePrepareMessage), web);
@@ -75,10 +75,11 @@ namespace WinPhoneApp
 
             string responseStringStatus = responseReader.ReadToEnd();
 
-            JObject o = JObject.Parse(responseStringStatus);
-            JArray responseArray = (JArray)o["response"];
+            
             try
             {
+                JObject o = JObject.Parse(responseStringStatus);
+                JArray responseArray = (JArray)o["response"];
                 this.Dispatcher.BeginInvoke(() =>
                 {
                     for (int i = 1; i < responseArray.Count; i++)
@@ -119,11 +120,10 @@ namespace WinPhoneApp
             StreamReader responseReader = new StreamReader(response.GetResponseStream());
 
             string responseStringStatus = responseReader.ReadToEnd();
-
-            JObject o = JObject.Parse(responseStringStatus);
-            JArray responseArray = (JArray)o["response"];
             try
             {
+                JObject o = JObject.Parse(responseStringStatus);
+                JArray responseArray = (JArray)o["response"];
                 foreach (var item in ml)
                 {
                     foreach (var uid in responseArray)
