@@ -11,6 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Xml;
 using System.Xml.Linq;
 using Microsoft.Phone.Controls;
 using WinPhoneApp.Data.Feed;
@@ -18,13 +19,13 @@ using WinPhoneApp.Data.Photo;
 using WinPhoneApp.Data;
 using Newtonsoft.Json.Linq;
 using WinPhoneApp.Data.Profile;
+using Microsoft.Phone.Tasks;
 
 namespace WinPhoneApp
 {
     public partial class MainPage : PhoneApplicationPage
     {
         private FeedList fl = new FeedList();
-        private PhotoItemList pl = new PhotoItemList();
         private MyProfile mp;
 
         public MainPage()
@@ -107,32 +108,79 @@ namespace WinPhoneApp
             JObject o = JObject.Parse(responseStringfeed);
             JArray responseFeeds = (JArray)o["response"]["items"];
             JArray responseProfiles = (JArray)o["response"]["profiles"];
-            try
+            //try
+            //{
+            foreach (var item in responseFeeds)
             {
-                foreach (var item in responseFeeds)
+                DateTime date = new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(Convert.ToDouble((int)item["date"]));
+                PhotoItemList pl = new PhotoItemList();
+                LinkItemList ll = new LinkItemList();
+                AudioItemList al = new AudioItemList();
+                foreach (var user in responseProfiles)
                 {
-                    DateTime date = new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(Convert.ToDouble((int)item["date"]));
-                    foreach (var user in responseProfiles)
+                    var attachments = item.SelectToken("attachments", false);
+                    if ((int)user["uid"] == (int)item["source_id"])
                     {
-                        if ((int)user["uid"] == (int)item["source_id"])
+                        string name = (string)user["first_name"] + " " + (string)user["last_name"];
+                        string avatar = (string)user["photo"];
+                        if (attachments != null)
                         {
-                            string name = (string)user["first_name"] + " " + (string)user["last_name"];
-                            string avatar = (string)user["photo"];
+                            foreach (var attachment in attachments)
+                            {
+                                switch ((string)attachment["type"])
+                                {
+                                    case "photo":
+                                        {
+                                            var image = attachment.SelectToken("photo", false);
+                                            if (image != null)
+                                            {
+                                                pl.Add(new PhotoItem((int)image["pid"], (int)image["owner_id"], (string)image["src"], (string)image["src_big"]));
+                                            }
+
+                                            break;
+                                        }
+                                    case "link":
+                                        {
+                                            var link = attachment.SelectToken("link", false);
+                                            if (link != null)
+                                            {
+                                                ll.Add(new LinkItem((string)link["url"], (string)link["title"], (string)link["description"], (string)link["image_src"]));
+                                            }
+                                            break;
+                                        }
+                                    case "audio":
+                                        {
+                                            var audio = attachment.SelectToken("audio", false);
+                                            if (audio != null)
+                                            {
+                                                al.Add(new AudioItem(null, null, null, null, null, null));
+                                            }
+                                            break;
+                                        }
+                                }
+                            }
+                            fl.Add(new FeedItem(name, avatar, (string)item["text"], date, pl, ll,al));
+                        }
+                        else
+                        {
                             fl.Add(new FeedItem(name, avatar, (string)item["text"], date));
                         }
+
                     }
                 }
-                this.Dispatcher.BeginInvoke(() =>
-                    {
-                        feedListBox.ItemsSource = fl;
-                        progressBar1.IsIndeterminate = false;
-                        
-                    });
             }
-            catch
-            {
-                this.Dispatcher.BeginInvoke(() => { MessageBox.Show("Новости не загрузились"); progressBar1.IsIndeterminate = false; });
-            }
+            this.Dispatcher.BeginInvoke(() =>
+                {
+                    feedListBox.ItemsSource = fl;
+
+                    progressBar1.IsIndeterminate = false;
+
+                });
+            //}
+            //catch
+            //{
+            //    this.Dispatcher.BeginInvoke(() => { MessageBox.Show("Новости не загрузились"); progressBar1.IsIndeterminate = false; });
+            //}
 
             #region старый вариант с xml
             //XElement xmlFeeds = XElement.Parse(responseStringfeed);
@@ -167,10 +215,7 @@ namespace WinPhoneApp
 
 
         }
-
         #endregion
-
-        
 
         private MyProfile GetMyProfile()
         {
@@ -274,7 +319,6 @@ namespace WinPhoneApp
         {
             NavigationService.Navigate(new Uri("/MessagesPage.xaml", UriKind.Relative));
         }
-<<<<<<< HEAD
         //private void MessageSendRequest()
         //{
         //    string requestString = string.Format("https://api.vkontakte.ru/method/messages.send?access_token={0}&uid=9299666&message={1}", Client.Instance.Access_token.token, "Трололо");
@@ -295,12 +339,19 @@ namespace WinPhoneApp
 
         //    JObject o = JObject.Parse(responseStringStatus);
         //}
-=======
+
 
         private void Navigate_to_FriendListPage(object sender, EventArgs e)
         {
             NavigationService.Navigate(new Uri("/FriendListPage.xaml", UriKind.Relative));
         }
->>>>>>> d299acb5c25c208866c57c226d221db7d4ec2606
+
+        private void HyperlinkButton_Click(object sender, RoutedEventArgs e)
+        {
+            var wbt = new WebBrowserTask();
+            HyperlinkButton btn = (HyperlinkButton)e.OriginalSource;
+            wbt.URL = (string)btn.NavigateUri.AbsoluteUri;
+            wbt.Show();
+        }
     }
 }

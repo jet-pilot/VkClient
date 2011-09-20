@@ -20,6 +20,38 @@
 
     <phone:PhoneApplicationPage.Resources>
         <data:FeedList x:Key="FeedListData"/>
+        <DataTemplate x:Name="images">
+            <StackPanel Orientation="Horizontal">
+                <Image Source="{Binding Src}" Stretch="None" />
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Name="links">
+            <StackPanel>
+                <HyperlinkButton Content="{Binding Title}" NavigateUri="{Binding Url}"  Click="HyperlinkButton_Click" Cursor="Hand" />
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Name="audios">
+            <StackPanel>
+                <MediaElement Source="{Binding Url}"/>
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Name="FeedListItem">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <StackPanel Orientation="Vertical">
+                    <Image Source="{Binding Avatar}" Grid.Row="0" VerticalAlignment="Top" Margin="20,20,10,0" Width="50" Height="50"/>
+                    <TextBlock Text="{Binding Author}" Grid.Row="0" Style="{StaticResource PhoneTextLargeStyle}"/>
+                    <!--<TextBlock Text="{Binding Date,Converter={StaticResource RelativeTimeConverter}}" Style="{StaticResource PhoneTextSmallStyle}"/>-->
+                    <TextBlock Text="{Binding Text}" Grid.Row="1"/>
+                    <ItemsControl  Grid.Row="2" ItemTemplate="{StaticResource images}" ItemsSource="{Binding Image}"/>
+                    <ItemsControl  Grid.Row="3" ItemTemplate="{StaticResource links}" ItemsSource="{Binding Link}"/>
+                    <ItemsControl ItemTemplate="{StaticResource audios}" ItemsSource="{Binding Audio}"/>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
         <myprofile:MyProfile x:Key="MyProfileData"/>
         <toolkit:RelativeTimeConverter x:Key="RelativeTimeConverter"/>
     </phone:PhoneApplicationPage.Resources>
@@ -27,7 +59,6 @@
     <!--LayoutRoot contains the root grid where all other page content is placed-->
     <Grid x:Name="LayoutRoot">
         <controls:Panorama>
-
             <!--Panorama item one-->
             <controls:PanoramaItem Header="профиль">
                 <Grid x:Name="MyProfilePanel" DataContext="{Binding Source={StaticResource MyProfileData}}">
@@ -50,29 +81,11 @@
             <!--Panorama item two-->
             <controls:PanoramaItem Header="новости">
                 <Grid x:Name="FeedPanel"  DataContext="{Binding Source={StaticResource FeedListData}}">
-                    <ListBox x:Name="feedListBox" ItemsSource="{Binding}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Grid Margin="0,0,0,18">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Image x:Name="photo" Source="{Binding Avatar}" Grid.Column="0" VerticalAlignment="Top" Margin="20,20,10,0" Width="50" Height="50"/>
-                                    <StackPanel Grid.Column="1">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock x:Name="author" Text="{Binding Author}" Margin="0,0,0,0" TextWrapping="Wrap" FontSize="32" />
-                                        </StackPanel>
-                                        <TextBlock Text="{Binding Date,Converter={StaticResource RelativeTimeConverter}}" TextWrapping="Wrap" FontSize="21.333" Foreground="{StaticResource PhoneSubtleBrush}"/>
-                                        <TextBlock Text="{Binding Text}" TextWrapping="Wrap" FontSize="21.333"/>
-                                    </StackPanel>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
+                    <ListBox x:Name="feedListBox" ItemTemplate="{StaticResource FeedListItem}">
                     </ListBox>
                 </Grid>
             </controls:PanoramaItem>
-            
+
         </controls:Panorama>
         <ProgressBar Height="4" HorizontalAlignment="Left" Margin="10,10,0,0" Name="progressBar1" VerticalAlignment="Top" Width="460" />
     </Grid>

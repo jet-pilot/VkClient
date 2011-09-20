@@ -58,12 +58,14 @@
     <Reference Include="system" />
     <Reference Include="System.Core" />
     <Reference Include="System.Net" />
+    <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Data\AudioItem.cs" />
     <Compile Include="Data\Auth\AccessInfoBag.cs" />
     <Compile Include="Data\Auth\AccessInfoStore.cs" />
     <Compile Include="Data\Auth\AuthorizeInfo.cs" />
@@ -71,6 +73,7 @@
     <Compile Include="Data\Feed\FeedList.cs" />
     <Compile Include="Data\Feed\FeedPhotoList.cs" />
     <Compile Include="Data\Friend\FriendList.cs" />
+    <Compile Include="Data\LinkItem.cs" />
     <Compile Include="Data\Message\MessageItem.cs" />
     <Compile Include="Data\Photo\PhotoItem.cs" />
     <Compile Include="Data\Profile\MyProfile.cs" />
