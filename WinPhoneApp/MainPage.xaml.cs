@@ -20,6 +20,8 @@ using Newtonsoft.Json.Linq;
 using WinPhoneApp.Data.Profile;
 using System.ComponentModel;
 using Microsoft.Phone.Tasks;
+using Microsoft.Phone.Shell;
+using System.Diagnostics;
 
 namespace WinPhoneApp
 {
@@ -27,6 +29,9 @@ namespace WinPhoneApp
     {
         private FeedList fl;
         private MyProfile mp;
+        ApplicationBarIconButton pict;
+        ApplicationBarIconButton camera;
+        string uploadUrl;
 
         public MainPage()
         {
@@ -38,6 +43,16 @@ namespace WinPhoneApp
         {
             Client.Instance.ActiveChanged += new EventHandler(ClientActiveChanged);
             this.UpdateUI();
+
+            pict = new ApplicationBarIconButton();
+            pict.IconUri = new Uri("/Images/appbar.cupcake.png", UriKind.RelativeOrAbsolute);
+            pict.Text = "фото";
+            pict.Click += pict_Click;
+
+            camera = new ApplicationBarIconButton();
+            camera.IconUri = new Uri("/Images/appbar.feature.camera.rest.png", UriKind.RelativeOrAbsolute);
+            camera.Text = "камера";
+            camera.Click += camera_Click;
         }
 
         private void ClientActiveChanged(object sender, EventArgs e)
@@ -281,10 +296,9 @@ namespace WinPhoneApp
 
             string responseStringStatus = responseReader.ReadToEnd();
 
-            JObject o = JObject.Parse(responseStringStatus);
-            //JArray responseArray = (JArray)o["response"];
             try
             {
+                JObject o = JObject.Parse(responseStringStatus);
                 this.Dispatcher.BeginInvoke(() =>
                     {
                         this.Status.Text = (string)o["response"]["text"];
@@ -322,5 +336,135 @@ namespace WinPhoneApp
             wbt.Uri = btn.NavigateUri;
             wbt.Show();
         }
+
+        #region отправка сообщения на стену
+        private void Post_send(object sender, EventArgs e)
+        {
+            GetWallUploadServerCallback();
+            PostSendCallback(PostBox.Text);
+        }
+
+        private void PostSendCallback(string message)
+        {
+            HttpWebRequest web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/wall.post?owner_id={0}&message={1}&access_token={2}", Client.Instance.Access_token.uid, message, Client.Instance.Access_token.token));
+            web.Method = "POST";
+            web.ContentType = "application/x-www-form-urlencoded";
+            web.BeginGetResponse(new AsyncCallback(ResponcePreparePost), web);
+            progressBar1.IsIndeterminate = true;
+        }
+        public void ResponcePreparePost(IAsyncResult e)
+        {
+            HttpWebRequest request = (HttpWebRequest)e.AsyncState;
+            HttpWebResponse response = (HttpWebResponse)request.EndGetResponse(e);
+
+            StreamReader responseReader = new StreamReader(response.GetResponseStream());
+
+            string responseString = responseReader.ReadToEnd();
+
+            try
+            {
+                JObject o = JObject.Parse(responseString);
+                this.Dispatcher.BeginInvoke(() =>
+                {
+                    int post_id = (int)o["response"]["post_id"];
+                    Debug.WriteLine(post_id.ToString());
+                    progressBar1.IsIndeterminate = false;
+                });
+            }
+            catch (Exception ex)
+            {
+                this.Dispatcher.BeginInvoke(() => { MessageBox.Show(ex.Message); });
+            }
+        }
+        #endregion
+
+        private void PostBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            ApplicationBar.Mode = ApplicationBarMode.Default;
+            ApplicationBar.Buttons.Add(pict);
+            ApplicationBar.Buttons.Add(camera);
+        }
+
+        private void PostBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            while (ApplicationBar.Buttons.Count > 0)
+            {
+                ApplicationBar.Buttons.RemoveAt(0);
+            }
+            ApplicationBar.Mode = ApplicationBarMode.Minimized;
+        }
+
+        private void pct_Completed(object sender, PhotoResult e)
+        {
+            if (e.TaskResult == TaskResult.OK)
+            {
+                BitmapImage bmp = new BitmapImage();
+                bmp.SetSource(e.ChosenPhoto);
+                PostAttachments.Items.Add(bmp);
+                PostBox.Focus();
+            }
+        }
+
+        void pict_Click(object sender, EventArgs e)
+        {
+            PhotoChooserTask pct = new PhotoChooserTask();
+            pct.Completed += new EventHandler<PhotoResult>(pct_Completed);
+            pct.Show();
+        }
+
+        void camera_Click(object sender, EventArgs e)
+        {
+            CameraCaptureTask pct = new CameraCaptureTask();
+            pct.Completed += new EventHandler<PhotoResult>(pct_Completed);
+            pct.Show();
+        }
+
+        #region получаем ссылку для загрузки
+        
+        private void GetWallUploadServerCallback()
+        {
+            HttpWebRequest web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/photos.getWallUploadServer?uid={0}&access_token={1}", Client.Instance.Access_token.uid, Client.Instance.Access_token.token));
+            web.Method = "POST";
+            web.ContentType = "application/x-www-form-urlencoded";
+            web.BeginGetResponse(new AsyncCallback(ResponcePrepareGetWallUploadServer), web);
+            progressBar1.IsIndeterminate = true;
+        }
+        private void ResponcePrepareGetWallUploadServer(IAsyncResult e)
+        {
+            HttpWebRequest request = (HttpWebRequest)e.AsyncState;
+            HttpWebResponse response = (HttpWebResponse)request.EndGetResponse(e);
+
+            StreamReader responseReader = new StreamReader(response.GetResponseStream());
+
+            string responseString = responseReader.ReadToEnd();
+
+            try
+            {
+                JObject o = JObject.Parse(responseString);
+                uploadUrl = (string)o["response"]["upload_url"];
+                Debug.WriteLine(uploadUrl);
+            }
+            catch (Exception ex)
+            {
+                this.Dispatcher.BeginInvoke(() => { MessageBox.Show(ex.Message); progressBar1.IsIndeterminate = false; });
+            }
+        }
+
+        #endregion
+
+        /// <summary>
+        /// конвертим картинку в массив байтов
+        /// </summary>
+        /// <param name="image"></param>
+        /// <returns></returns>
+        byte[] ImageToBytes(BitmapImage image)
+        {
+            MemoryStream stream;
+            stream = new MemoryStream(File.OpenRead(image.UriSource.AbsolutePath).ReadByte());
+            byte[] returnBytes = stream.ToArray();
+            stream.Close();
+            return returnBytes;
+        }
+
     }
 }

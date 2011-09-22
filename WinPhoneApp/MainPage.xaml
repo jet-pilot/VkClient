@@ -41,6 +41,7 @@
 
     <phone:PhoneApplicationPage.Resources>
         <data:FeedList x:Key="FeedListData"/>
+        <myprofile:MyProfile x:Key="MyProfileData"/>
         <toolkit:RelativeTimeConverter x:Key="RelativeTimeConverter"/>
         <DataTemplate x:Name="images">
             <StackPanel Orientation="Horizontal">
@@ -79,7 +80,9 @@
                 </StackPanel>
             </Grid>
         </DataTemplate>
-        <myprofile:MyProfile x:Key="MyProfileData"/>
+        <DataTemplate x:Name="PostAttachmentImage">
+            <Image Width="100" Height="100" Source="{Binding}"/>
+        </DataTemplate>
     </phone:PhoneApplicationPage.Resources>
 
     <!--LayoutRoot contains the root grid where all other page content is placed-->
@@ -106,10 +109,28 @@
 
             <!--Panorama item two-->
             <controls:PanoramaItem Header="новости">
-                <Grid x:Name="FeedPanel"  DataContext="{Binding Source={StaticResource FeedListData}}">
-                    <ListBox x:Name="feedListBox" ItemTemplate="{StaticResource FeedListItem}">
-                    </ListBox>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Vertical">
+                        <toolkit:PhoneTextBox x:Name="PostBox" 
+                                         Hint="Что нового?" 
+                                         Grid.Row="0"
+                                         ActionIcon="/Images/appbar.message.send.png"
+                                         ActionIconTapped="Post_send"
+                                         GotFocus="PostBox_GotFocus"
+                                         LostFocus="PostBox_LostFocus"
+                                         LengthIndicatorVisible="False" />
+                        <ItemsControl x:Name="PostAttachments" ItemTemplate="{StaticResource PostAttachmentImage}"/>
+                    </StackPanel>
+                    <Grid x:Name="FeedPanel" Grid.Row="1" DataContext="{Binding Source={StaticResource FeedListData}}">
+                        <ListBox x:Name="feedListBox" ItemTemplate="{StaticResource FeedListItem}">
+                        </ListBox>
+                    </Grid>
                 </Grid>
+
             </controls:PanoramaItem>
 
         </controls:Panorama>
