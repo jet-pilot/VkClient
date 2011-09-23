@@ -40,8 +40,8 @@
     <!--Sample code showing usage of ApplicationBar-->
     <phone:PhoneApplicationPage.ApplicationBar>
         <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True">
-            <shell:ApplicationBarIconButton IconUri="/Images/appbar_button1.png" Text="отправить" Click="Send_Click" />
-            <shell:ApplicationBarIconButton IconUri="/Images/appbar_button2.png" Text="отмена"/>
+            <shell:ApplicationBarIconButton IconUri="/Images/appbar.message.send.png" Text="отправить" Click="Send_Click" />
+            <shell:ApplicationBarIconButton IconUri="/Images/ApplicationBar.Delete.png" Text="отмена"/>
         </shell:ApplicationBar>
     </phone:PhoneApplicationPage.ApplicationBar>
 

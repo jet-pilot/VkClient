@@ -18,7 +18,7 @@ namespace WinPhoneApp.Data.Auth
         public static string auth_uri = "http://api.vk.com/oauth/authorize";
         public static string redirect_uri = "http://api.vk.com/blank.html";
         public static string display = "wap";
-        public static string scope = "13318";
+        public static string scope = "441407";
         public static string response_type = "token";
 
         public static string GetAuthUrl()

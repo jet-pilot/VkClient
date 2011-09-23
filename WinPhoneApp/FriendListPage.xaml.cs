@@ -55,8 +55,8 @@ namespace WinPhoneApp
                 JArray responseFriends = (JArray)o["response"];
                 foreach (var item in responseFriends)
                 {
-                    fl.Add(new MyProfile((string)item["first_name"], (string)item["last_name"], (string)item["photo"]));
-                    if ((int)item["online"] == 1) { ofl.Add(new MyProfile((string)item["first_name"], (string)item["last_name"], (string)item["photo"])); }
+                    fl.Add(new MyProfile((string)item["first_name"], (string)item["last_name"], (string)item["photo"], (int)item["uid"]));
+                    if ((int)item["online"] == 1) { ofl.Add(new MyProfile((string)item["first_name"], (string)item["last_name"], (string)item["photo"], (int)item["uid"])); }
                 }
                 this.Dispatcher.BeginInvoke(() =>
                     {
@@ -76,6 +76,12 @@ namespace WinPhoneApp
         private void Navigate_to_Search(object sender, EventArgs e)
         {
             NavigationService.Navigate(new Uri("/SearchFriend.xaml", UriKind.Relative));
+        }
+
+        private void NavigateToProfile(object sender, System.Windows.Input.GestureEventArgs e)
+        {
+            MyProfile item = ((FrameworkElement) sender).DataContext as MyProfile;
+            NavigationService.Navigate(new Uri("/ProfilePage.xaml?uid=" + item.Uid, UriKind.Relative));
         }
 
     }

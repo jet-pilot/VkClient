@@ -15,6 +15,7 @@ namespace WinPhoneApp.Data.Profile
     public class MyProfile : INotifyPropertyChanged
     {
         private int _uid;
+        private string _full_name;
         private string _first_name;
         private string _last_name;
         private string _nickname;
@@ -29,9 +30,19 @@ namespace WinPhoneApp.Data.Profile
         private string _photo_rec;
         private string _home_phone;
         private string _mobile_phone;
+        private string _university;
+        private string _status;
 
         public MyProfile()
         {
+        }
+
+        public MyProfile(string first_name, string last_name, string photo, int uid)
+        {
+            this._first_name = first_name;
+            this._last_name = last_name;
+            this._photo = photo;
+            this._uid = uid;
         }
 
         public MyProfile(string first_name, string last_name, string photo)
@@ -39,6 +50,7 @@ namespace WinPhoneApp.Data.Profile
             this._first_name = first_name;
             this._last_name = last_name;
             this._photo = photo;
+            this._status = "";
         }
 
         public MyProfile(string first_name, string last_name, string photo, string mobile_phone, string home_phone)
@@ -56,6 +68,12 @@ namespace WinPhoneApp.Data.Profile
             set { _uid = value; }
         }
 
+        public string Full_name
+        {
+            get { return _full_name; }
+            set { _full_name = value; NotifyPropertyChanged("Full_name"); }
+        }
+
         public string First_name
         {
             get { return _first_name; }
@@ -71,31 +89,31 @@ namespace WinPhoneApp.Data.Profile
         public string Nickname
         {
             get { return _nickname; }
-            set { _nickname = value; }
+            set { _nickname = value; NotifyPropertyChanged("Nickname"); }
         }
 
         public string Sex
         {
             get { return _sex; }
-            set { _sex = value; }
+            set { _sex = value; NotifyPropertyChanged("Sex"); }
         }
 
         public string Bdate
         {
             get { return _bdate; }
-            set { _bdate = value; }
+            set { _bdate = value; NotifyPropertyChanged("Bdate"); }
         }
 
         public string City
         {
             get { return _city; }
-            set { _city = value; }
+            set { _city = value; NotifyPropertyChanged("City"); }
         }
 
         public string Country
         {
             get { return _country; }
-            set { _country = value; }
+            set { _country = value; NotifyPropertyChanged("Country"); }
         }
 
         public string Timezone
@@ -113,7 +131,7 @@ namespace WinPhoneApp.Data.Profile
         public string Photo_medium
         {
             get { return _photo_medium; }
-            set { _photo_medium = value; }
+            set { _photo_medium = value; NotifyPropertyChanged("Photo_medium"); }
         }
 
         public string Photo_big
@@ -137,7 +155,27 @@ namespace WinPhoneApp.Data.Profile
         public string Mobile_phone
         {
             get { return _mobile_phone; }
-            set { _mobile_phone = value; }
+            set
+            {
+                _mobile_phone = value;
+                NotifyPropertyChanged("Mobile_phone");
+            }
+        }
+
+        public string University
+        {
+            get { return _university; }
+            set { _university = value; NotifyPropertyChanged("University"); }
+        }
+
+        public string Status
+        {
+            get { return _status; }
+            set
+            {
+                _status = value;
+                NotifyPropertyChanged("Status");
+            }
         }
 
         private void NotifyPropertyChanged(String info)

@@ -26,18 +26,16 @@
 
     <phone:PhoneApplicationPage.Resources>
         <friends:FriendList x:Key="FriendsListData"/>
-        
+
         <DataTemplate x:Key="friendsItemTemplate">
             <Grid Margin="12,8,0,8">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Image Width="70" Height="70" Source="{Binding Photo}" Grid.Column="0" VerticalAlignment="Top"/>
-                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="{Binding First_name}" Style="{StaticResource PhoneTextLargeStyle}" FontFamily="{StaticResource PhoneFontFamilyNormal}" Margin="12,-12,12,6"/>
-                        <TextBlock Text="{Binding Last_name}" Style="{StaticResource PhoneTextLargeStyle}" FontFamily="{StaticResource PhoneFontFamilyNormal}" Margin="12,-12,12,6"/>
+                <StackPanel Tap="NavigateToProfile" Orientation="Horizontal">
+                    <Image Width="70" Height="70" Source="{Binding Photo}" VerticalAlignment="Top"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding First_name}" Style="{StaticResource PhoneTextLargeStyle}" FontFamily="{StaticResource PhoneFontFamilyNormal}" Margin="12,-12,12,6"/>
+                            <TextBlock Text="{Binding Last_name}" Style="{StaticResource PhoneTextLargeStyle}" FontFamily="{StaticResource PhoneFontFamilyNormal}" Margin="12,-12,12,6"/>
+                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
             </Grid>

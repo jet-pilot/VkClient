@@ -45,7 +45,7 @@
         <toolkit:RelativeTimeConverter x:Key="RelativeTimeConverter"/>
         <DataTemplate x:Name="images">
             <StackPanel Orientation="Horizontal">
-                <Image Source="{Binding Src}" Stretch="None" />
+                <Image Source="{Binding Src}" Stretch="None" Margin="5,5,5,5"/>
             </StackPanel>
         </DataTemplate>
         <DataTemplate x:Name="links">
@@ -67,11 +67,11 @@
 
                 <Image x:Name="photo" Source="{Binding Avatar}" Grid.Column="0" VerticalAlignment="Top" Margin="20,20,10,0" Width="50" Height="50"/>
                 <StackPanel Grid.Column="1">
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Orientation="Horizontal" Tap="NavigateToProfile">
                         <TextBlock x:Name="author" Text="{Binding Author}" Margin="0,0,0,0" TextWrapping="Wrap" FontSize="32" />
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <TextBlock Text="{Binding Date,Converter={StaticResource RelativeTimeConverter}}" TextWrapping="Wrap" FontSize="21.333" Foreground="{StaticResource PhoneSubtleBrush}"/>
+                        <!--<TextBlock Text="{Binding Date,Converter={StaticResource RelativeTimeConverter}}" TextWrapping="Wrap" FontSize="21.333" Foreground="{StaticResource PhoneSubtleBrush}"/>-->
                         <TextBlock Text="{Binding Text}" TextWrapping="Wrap" FontSize="21.333"/>
                         <ItemsControl ItemTemplate="{StaticResource images}" ItemsSource="{Binding Image}"/>
                         <ItemsControl ItemTemplate="{StaticResource links}" ItemsSource="{Binding Link}"/>
@@ -115,7 +115,7 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <StackPanel Orientation="Vertical">
-                        <toolkit:PhoneTextBox x:Name="PostBox" 
+                        <toolkit:PhoneTextBox x:Name="PostBox"
                                          Hint="Что нового?" 
                                          Grid.Row="0"
                                          ActionIcon="/Images/appbar.message.send.png"
@@ -131,6 +131,30 @@
                     </Grid>
                 </Grid>
 
+            </controls:PanoramaItem>
+            
+            <controls:PanoramaItem Header="стена">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Vertical">
+                        <toolkit:PhoneTextBox x:Name="WallPostBox" 
+                                         Hint="Что нового?" 
+                                         Grid.Row="0"
+                                         ActionIcon="/Images/appbar.message.send.png"
+                                         ActionIconTapped="WallPostSend"
+                                         GotFocus="PostBox_GotFocus"
+                                         LostFocus="PostBox_LostFocus"
+                                         LengthIndicatorVisible="False" />
+                        <ItemsControl x:Name="WallAttachments" ItemTemplate="{StaticResource PostAttachmentImage}"/>
+                    </StackPanel>
+                    <Grid x:Name="WallPanel" Grid.Row="1" DataContext="{Binding Source={StaticResource FeedListData}}">
+                        <ListBox x:Name="wallListBox" ItemTemplate="{StaticResource FeedListItem}">
+                        </ListBox>
+                    </Grid>
+                </Grid>
             </controls:PanoramaItem>
 
         </controls:Panorama>

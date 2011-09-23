@@ -32,6 +32,7 @@ namespace WinPhoneApp.Data.Feed
         private PhotoItemList _image;
         private LinkItemList _link;
         private AudioItemList _audio;
+        private int _uid;
 
         public AudioItemList Audio
         {
@@ -91,6 +92,29 @@ namespace WinPhoneApp.Data.Feed
             this._link = link;
             this._audio = audio;
         }
+
+        /*Конструктор для стены без аттача*/
+        public FeedItem(string author, string avatar, string text, DateTime date, int uid)
+        {
+            this._author = author;
+            this._avatar = avatar;
+            this._text = text;
+            this._date = date;
+            this._uid = uid;
+        }
+        /*Конструктор для стены с аттачем*/
+        public FeedItem(string author, string avatar, string text, DateTime date, PhotoItemList image, LinkItemList link, AudioItemList audio, int uid)
+        {
+            this._author = author;
+            this._avatar = avatar;
+            this._text = text;
+            this._date = date;
+            this._image = image;
+            this._link = link;
+            this._audio = audio;
+            this._uid = uid;
+        }
+
         public string Author
         {
             get { return _author; }
@@ -118,6 +142,16 @@ namespace WinPhoneApp.Data.Feed
             {
                 _text = value;
                 NotifyPropertyChanged("Text");
+            }
+        }
+
+        public int Uid
+        {
+            get { return _uid; }
+            set
+            {
+                _uid = value;
+                NotifyPropertyChanged("Uid");
             }
         }
 

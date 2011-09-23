@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -28,10 +29,14 @@ namespace WinPhoneApp
     public partial class MainPage : PhoneApplicationPage
     {
         private FeedList fl;
+        private FeedList wl;
         private MyProfile mp;
         ApplicationBarIconButton pict;
         ApplicationBarIconButton camera;
         string uploadUrl;
+        private byte[] buffer;
+        private BitmapImage bitmapImage;
+        private List<int> uidlist = new List<int>();
 
         public MainPage()
         {
@@ -68,6 +73,7 @@ namespace WinPhoneApp
             {
                 GetFeedList();
                 GetMyProfile();
+                GetWallList();
             }
         }
 
@@ -117,6 +123,7 @@ namespace WinPhoneApp
                     PhotoItemList pl = new PhotoItemList();
                     LinkItemList ll = new LinkItemList();
                     AudioItemList al = new AudioItemList();
+                    int uid = (int)item["source_id"];
                     foreach (var user in responseProfiles)
                     {
                         var attachments = item.SelectToken("attachments", false);
@@ -160,11 +167,11 @@ namespace WinPhoneApp
                                             }
                                     }
                                 }
-                                fl.Add(new FeedItem(name, avatar, (string)item["text"], date, pl, ll, al));
+                                fl.Add(new FeedItem(name, avatar, (string)item["text"], date, pl, ll, al, uid));
                             }
                             else
                             {
-                                fl.Add(new FeedItem(name, avatar, (string)item["text"], date));
+                                fl.Add(new FeedItem(name, avatar, (string)item["text"], date, uid));
                             }
 
                         }
@@ -183,39 +190,159 @@ namespace WinPhoneApp
                 this.Dispatcher.BeginInvoke(() => { MessageBox.Show("Новости не загрузились"); progressBar1.IsIndeterminate = false; });
             }
 
-            #region старый вариант с xml
-            //XElement xmlFeeds = XElement.Parse(responseStringfeed);
-
-            //try
-            //{
-            //    XElement newxmlFeeds = new XElement("posts",
-            //    from item in xmlFeeds.Element("items").Elements("item")
-            //    join profile in xmlFeeds.Element("profiles").Elements("user")
-            //    on (string)item.Element("source_id") equals (string)profile.Element("uid")
-            //    select new XElement("feed",
-            //        new XElement("author", profile.Element("first_name").Value + " " + profile.Element("last_name").Value),
-            //        new XElement("avatar", profile.Element("photo").Value),
-            //        new XElement("text", item.Element("text").Value),
-            //        new XElement("date",item.Element("date").Value)
-            //        )
-            //        );
-
-            //    var items = from feed in newxmlFeeds.Descendants("feed")
-            //                select new FeedItem(feed.Element("author").Value, feed.Element("avatar").Value, feed.Element("text").Value, new DateTime(1970, 1, 1, 0, 0, 0));
-            //    foreach (var item in items)
-            //    {
-            //        fl.Add(item);
-            //    }
-            //    this.Dispatcher.BeginInvoke(() => { feedListBox.ItemsSource = fl; progressBar1.IsIndeterminate = false; });
-            //}
-            //catch
-            //{
-            //    this.Dispatcher.BeginInvoke(() => { MessageBox.Show("Новости не загрузились"); progressBar1.IsIndeterminate = false; });
-            //}
-            #endregion
-
 
         }
+        #endregion
+
+
+        private FeedList GetWallList()
+        {
+            if (wl != null)
+            {
+                return wl;
+            }
+            else
+            {
+                wl = new FeedList();
+                ListWallCallback();
+                //FeedPanel.DataContext = fl;
+                return wl;
+            }
+        }
+
+        #region получаем стену
+
+        private void ListWallCallback()
+        {
+            HttpWebRequest web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/wall.get?uid={0}&count=20&access_token={1}", Client.Instance.Access_token.uid, Client.Instance.Access_token.token));
+            web.Method = "POST";
+            web.ContentType = "application/x-www-form-urlencoded";
+            web.BeginGetResponse(new AsyncCallback(ResponsePrepareWall), web);
+            progressBar1.IsIndeterminate = true;
+        }
+
+        private void ResponsePrepareWall(IAsyncResult e)
+        {
+            HttpWebRequest request = (HttpWebRequest)e.AsyncState;
+            HttpWebResponse response = (HttpWebResponse)request.EndGetResponse(e);
+
+            StreamReader responseReader = new StreamReader(response.GetResponseStream());
+
+            try
+            {
+                string responseString = responseReader.ReadToEnd();
+                JObject o = JObject.Parse(responseString);
+                JArray responseFeeds = (JArray)o["response"];
+                for (int i = 1; i < responseFeeds.Count;i++ )
+                {
+                    DateTime date = new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(Convert.ToDouble((int)responseFeeds[i]["date"]));
+                    PhotoItemList pl = new PhotoItemList();
+                    LinkItemList ll = new LinkItemList();
+                    AudioItemList al = new AudioItemList();
+
+                    var attachments = responseFeeds[i].SelectToken("attachments", false);
+                    string name = " ";
+                    string avatar = "http://cs5425.vk.com/u27309041/e_0bf7e5d5.jpg";
+                    int uid = (int)responseFeeds[i]["from_id"];
+                    if (attachments != null)
+                    {
+                        foreach (var attachment in attachments)
+                        {
+                            switch ((string)attachment["type"])
+                            {
+                                case "photo":
+                                    {
+                                        var image = attachment.SelectToken("photo", false);
+                                        if (image != null)
+                                        {
+                                            pl.Add(new PhotoItem((int)image["pid"], (int)image["owner_id"], (string)image["src"], (string)image["src_big"]));
+                                        }
+
+                                        break;
+                                    }
+                                case "link":
+                                    {
+                                        var link = attachment.SelectToken("link", false);
+                                        if (link != null)
+                                        {
+                                            ll.Add(new LinkItem((string)link["url"], (string)link["title"], (string)link["description"], (string)link["image_src"]));
+                                        }
+                                        break;
+                                    }
+                                case "audio":
+                                    {
+                                        var audio = attachment.SelectToken("audio", false);
+                                        if (audio != null)
+                                        {
+                                            al.Add(new AudioItem());
+                                        }
+                                        break;
+                                    }
+                            }
+                        }
+                        wl.Add(new FeedItem(name, avatar, (string)responseFeeds[i]["text"], date, pl, ll, al, uid));
+                        this.uidlist.Add((int)responseFeeds[i]["from_id"]);
+                    }
+                    else
+                    {
+                        wl.Add(new FeedItem(name, avatar, (string)responseFeeds[i]["text"], date, uid));
+                        this.uidlist.Add((int)responseFeeds[i]["from_id"]);
+                    }
+                }
+                this.Dispatcher.BeginInvoke(() =>
+                {
+                    ListProfileWallCallback();
+                    this.progressBar1.IsIndeterminate = false;
+                });
+                
+            }
+            catch
+            {
+                this.Dispatcher.BeginInvoke(() => { MessageBox.Show("Сообщения стены не загрузились"); progressBar1.IsIndeterminate = false; });
+            }
+        }
+
+        private void ListProfileWallCallback()
+        {
+            string requestString = string.Format("https://api.vkontakte.ru/method/getProfiles?access_token={0}&fields=photo&uids=", Client.Instance.Access_token.token);
+            foreach (var item in this.uidlist)
+            {
+                requestString += "," + item;
+            }
+            HttpWebRequest web = (HttpWebRequest)WebRequest.Create(requestString);
+            web.Method = "POST";
+            web.ContentType = "application/x-www-form-urlencoded";
+            web.BeginGetResponse(new AsyncCallback(ResponcePrepareProfileWall), web);
+            this.progressBar1.IsIndeterminate = true;
+        }
+        public void ResponcePrepareProfileWall(IAsyncResult e)
+        {
+            HttpWebRequest request = (HttpWebRequest)e.AsyncState;
+            HttpWebResponse response = (HttpWebResponse)request.EndGetResponse(e);
+
+            StreamReader responseReader = new StreamReader(response.GetResponseStream());
+
+            try
+            {
+                string responseStringStatus = responseReader.ReadToEnd();
+                JObject o = JObject.Parse(responseStringStatus);
+                JArray responseArray = (JArray)o["response"];
+                foreach (var item in wl)
+                {
+                    foreach (var uid in responseArray)
+                    {
+                        if (item.Uid == (int)uid["uid"]) { item.Author = uid["first_name"] + " " + uid["last_name"]; item.Avatar = (string)uid["photo"]; break; }
+                    }
+                }
+                this.Dispatcher.BeginInvoke(() => { this.wallListBox.ItemsSource = wl; this.progressBar1.IsIndeterminate = false; });
+            }
+            catch
+            {
+
+            }
+        }
+
+
         #endregion
 
         private MyProfile GetMyProfile()
@@ -253,10 +380,9 @@ namespace WinPhoneApp
 
             StreamReader responseReader = new StreamReader(response.GetResponseStream());
 
-            string responseStringprofile = responseReader.ReadToEnd();
-
             try
             {
+                string responseStringprofile = responseReader.ReadToEnd();
                 JObject o = JObject.Parse(responseStringprofile);
                 JArray responseArray = (JArray)o["response"];
 
@@ -294,10 +420,9 @@ namespace WinPhoneApp
 
             StreamReader responseReader = new StreamReader(response.GetResponseStream());
 
-            string responseStringStatus = responseReader.ReadToEnd();
-
             try
             {
+                string responseStringStatus = responseReader.ReadToEnd();
                 JObject o = JObject.Parse(responseStringStatus);
                 this.Dispatcher.BeginInvoke(() =>
                     {
@@ -320,6 +445,12 @@ namespace WinPhoneApp
             NavigationService.Navigate(new Uri("/FriendListPage.xaml", UriKind.Relative));
         }
 
+        private void NavigateToProfile(object sender, System.Windows.Input.GestureEventArgs e)
+        {
+            FeedItem item = ((FrameworkElement)sender).DataContext as FeedItem;
+            NavigationService.Navigate(new Uri("/ProfilePage.xaml?uid=" + item.Uid, UriKind.Relative));
+        }
+
         protected override void OnBackKeyPress(CancelEventArgs e)
         {
             base.OnBackKeyPress(e);
@@ -340,8 +471,31 @@ namespace WinPhoneApp
         #region отправка сообщения на стену
         private void Post_send(object sender, EventArgs e)
         {
-            GetWallUploadServerCallback();
-            PostSendCallback(PostBox.Text);
+            //GetWallUploadServerCallback();
+            if (PostBox.Text.Length > 0)
+            {
+                PostSendCallback(PostBox.Text);
+            }
+            else
+            {
+                this.Dispatcher.BeginInvoke(
+                    () => MessageBox.Show("Невозможно отправить пустое сообщение, напишите хоть что-нибудь"));
+            }
+        }
+
+        private void WallPostSend(object sender, EventArgs e)
+        {
+            //GetWallUploadServerCallback();
+            if (WallPostBox.Text.Length > 0)
+            {
+                PostSendCallback(WallPostBox.Text);
+                
+            }
+            else
+            {
+                this.Dispatcher.BeginInvoke(
+                    () => MessageBox.Show("Невозможно отправить пустое сообщение, напишите хоть что-нибудь"));
+            }
         }
 
         private void PostSendCallback(string message)
@@ -368,6 +522,8 @@ namespace WinPhoneApp
                 {
                     int post_id = (int)o["response"]["post_id"];
                     Debug.WriteLine(post_id.ToString());
+                    PostBox.Text = "";
+                    WallPostBox.Text = "";
                     progressBar1.IsIndeterminate = false;
                 });
             }
@@ -400,6 +556,16 @@ namespace WinPhoneApp
             {
                 BitmapImage bmp = new BitmapImage();
                 bmp.SetSource(e.ChosenPhoto);
+                bitmapImage = bmp;
+
+                using (Stream filestream = e.ChosenPhoto)
+                {
+                    buffer = new byte[filestream.Length];
+                    filestream.Read(buffer, 0, (int)filestream.Length);
+                    Debug.WriteLine(buffer.Length);
+                }
+
+
                 PostAttachments.Items.Add(bmp);
                 PostBox.Focus();
             }
@@ -420,7 +586,7 @@ namespace WinPhoneApp
         }
 
         #region получаем ссылку для загрузки
-        
+
         private void GetWallUploadServerCallback()
         {
             HttpWebRequest web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/photos.getWallUploadServer?uid={0}&access_token={1}", Client.Instance.Access_token.uid, Client.Instance.Access_token.token));
@@ -443,6 +609,7 @@ namespace WinPhoneApp
                 JObject o = JObject.Parse(responseString);
                 uploadUrl = (string)o["response"]["upload_url"];
                 Debug.WriteLine(uploadUrl);
+                UploadCallback(uploadUrl, buffer);
             }
             catch (Exception ex)
             {
@@ -452,19 +619,64 @@ namespace WinPhoneApp
 
         #endregion
 
-        /// <summary>
-        /// конвертим картинку в массив байтов
-        /// </summary>
-        /// <param name="image"></param>
-        /// <returns></returns>
-        byte[] ImageToBytes(BitmapImage image)
+
+        #region заливаем на сервер
+
+        private void UploadCallback(string url, byte[] data)
         {
-            MemoryStream stream;
-            stream = new MemoryStream(File.OpenRead(image.UriSource.AbsolutePath).ReadByte());
-            byte[] returnBytes = stream.ToArray();
-            stream.Close();
-            return returnBytes;
+            HttpWebRequest web = (HttpWebRequest)WebRequest.Create(url);
+            web.Method = "POST";
+            web.ContentType = "application/x-www-form-urlencoded";
+            web.BeginGetRequestStream(new AsyncCallback(GetRequestStreamCallback), web);
+            progressBar1.IsIndeterminate = true;
         }
+
+        private void GetRequestStreamCallback(IAsyncResult asynchronousResult)
+        {
+            HttpWebRequest request = (HttpWebRequest)asynchronousResult.AsyncState;
+
+            // End the operation
+            Stream postStream = request.EndGetRequestStream(asynchronousResult);
+
+            string postData = "photo=";
+            byte[] postdata = Encoding.UTF8.GetBytes(postData);
+
+            byte[] byteArray = new byte[postdata.Length + buffer.Length];
+            Array.Copy(postdata, 0, byteArray, 0, postdata.Length);
+            Array.Copy(buffer, 0, byteArray, postdata.Length, buffer.Length);
+
+            // Write to the request stream.
+            
+            postStream.Write(postdata, 0, postdata.Length);
+            Debug.WriteLine(postStream.Length);
+            postStream.Close();
+
+            // Start the asynchronous operation to get the response
+            request.BeginGetResponse(new AsyncCallback(ResponceUpload), request);
+        }
+
+        private void ResponceUpload(IAsyncResult e)
+        {
+            HttpWebRequest request = (HttpWebRequest)e.AsyncState;
+            HttpWebResponse response = (HttpWebResponse)request.EndGetResponse(e);
+
+            StreamReader responseReader = new StreamReader(response.GetResponseStream());
+
+            string responseString = responseReader.ReadToEnd();
+
+            try
+            {
+                JObject o = JObject.Parse(responseString);
+                Debug.WriteLine("ответ сервера: ");
+                Debug.WriteLine(o.ToString());
+            }
+            catch (Exception ex)
+            {
+                this.Dispatcher.BeginInvoke(() => { MessageBox.Show(ex.Message); progressBar1.IsIndeterminate = false; });
+            }
+        }
+
+        #endregion
 
     }
 }
