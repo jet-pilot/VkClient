@@ -1,0 +1,141 @@
+﻿<phone:PhoneApplicationPage 
+    x:Class="WinPhoneApp.GroupPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:phone="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone"
+    xmlns:shell="clr-namespace:Microsoft.Phone.Shell;assembly=Microsoft.Phone"
+    xmlns:controls="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:toolkit="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone.Controls.Toolkit"
+    xmlns:data="clr-namespace:WinPhoneApp.Data.Feed" xmlns:info="clr-namespace:WinPhoneApp.Data.Group" mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="768"
+    FontFamily="{StaticResource PhoneFontFamilyNormal}"
+    FontSize="{StaticResource PhoneFontSizeNormal}"
+    Foreground="{StaticResource PhoneForegroundBrush}"
+    SupportedOrientations="Portrait"  Orientation="Portrait"
+    shell:SystemTray.IsVisible="True">
+
+    <toolkit:TransitionService.NavigationInTransition>
+        <toolkit:NavigationInTransition>
+            <toolkit:NavigationInTransition.Backward>
+                <toolkit:TurnstileTransition Mode="BackwardIn"/>
+            </toolkit:NavigationInTransition.Backward>
+            <toolkit:NavigationInTransition.Forward>
+                <toolkit:TurnstileTransition Mode="ForwardIn"/>
+            </toolkit:NavigationInTransition.Forward>
+        </toolkit:NavigationInTransition>
+    </toolkit:TransitionService.NavigationInTransition>
+    <toolkit:TransitionService.NavigationOutTransition>
+        <toolkit:NavigationOutTransition>
+            <toolkit:NavigationOutTransition.Backward>
+                <toolkit:TurnstileTransition Mode="BackwardOut"/>
+            </toolkit:NavigationOutTransition.Backward>
+            <toolkit:NavigationOutTransition.Forward>
+                <toolkit:TurnstileTransition Mode="ForwardOut"/>
+            </toolkit:NavigationOutTransition.Forward>
+        </toolkit:NavigationOutTransition>
+    </toolkit:TransitionService.NavigationOutTransition>
+
+    <phone:PhoneApplicationPage.Resources>
+        <info:GroupItem x:Key="InfoData" />
+        <data:FeedList x:Key="WallListData" />
+        <DataTemplate x:Name="images">
+            <StackPanel Orientation="Horizontal">
+                <Image Source="{Binding Src}" Stretch="None" Margin="5,5,5,5"/>
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Name="links">
+            <StackPanel>
+                <HyperlinkButton Content="{Binding Title}" NavigateUri="{Binding Url}"  Click="HyperlinkButton_Click" Cursor="Hand" />
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Name="audios">
+            <StackPanel>
+                <MediaElement Source="{Binding Url}"/>
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Name="WallListItem">
+            <Grid Margin="0,0,0,18">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Image x:Name="photo" Source="{Binding Avatar}" Grid.Column="0" VerticalAlignment="Top" Margin="20,20,10,0" Width="50" Height="50"/>
+                <StackPanel Grid.Column="1">
+                    <StackPanel Orientation="Horizontal" Tap="NavigateToProfileFromWall">
+                        <TextBlock x:Name="author" Text="{Binding Author}" Margin="0,0,0,0" TextWrapping="Wrap" FontSize="32" />
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Text="{Binding Date}" TextWrapping="Wrap" FontSize="21.333" Foreground="{StaticResource PhoneSubtleBrush}"/>
+                        <TextBlock Text="{Binding Text}" TextWrapping="Wrap" FontSize="21.333"/>
+                        <ItemsControl ItemTemplate="{StaticResource images}" ItemsSource="{Binding Image}"/>
+                        <ItemsControl ItemTemplate="{StaticResource links}" ItemsSource="{Binding Link}"/>
+                        <ItemsControl ItemTemplate="{StaticResource audios}" ItemsSource="{Binding Audio}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+    </phone:PhoneApplicationPage.Resources>
+
+    <!--LayoutRoot is the root grid where all page content is placed-->
+    <Grid x:Name="LayoutRoot" Background="Transparent">
+        <!--Pivot Control-->
+        <controls:Pivot x:Name="Group" Title=" ">
+            <!--Pivot item one-->
+            <controls:PivotItem Header="инфо">
+                <StackPanel x:Name="Info" DataContext="{Binding Source={StaticResource InfoData}}">
+                    <StackPanel Height="150" Orientation="Horizontal" VerticalAlignment="Top" Margin="12,0,12,0">
+                        <Image Source="{Binding Photo}" VerticalAlignment="Top" Margin="0,0,0,0" Width="150" Height="150"/>
+                        <StackPanel>
+                            <TextBlock Text="{Binding Name}" Margin="20,0,0,0" TextWrapping="Wrap" Style="{StaticResource PhoneTextTitle3Style}" MaxWidth="350"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Margin="12,20,12,0" Orientation="Horizontal">
+                        <TextBlock Text="кол-во участников" Style="{StaticResource PhoneTextTitle2Style}" />
+                        <TextBlock Text="{Binding CountMember}" Style="{StaticResource PhoneTextTitle2Style}" Foreground="{StaticResource PhoneSubtleBrush}"/>
+                    </StackPanel>
+                </StackPanel>
+            </controls:PivotItem>
+
+            <!--Pivot item two-->
+            <controls:PivotItem Header="стена">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Vertical">
+                        <toolkit:PhoneTextBox x:Name="WallPostBox" 
+                                         Hint="че писать будем?" 
+                                         Grid.Row="0"
+                                         ActionIcon="/Images/appbar.message.send.png"
+                                         ActionIconTapped="WallPostSend"
+                                         LengthIndicatorVisible="False" />
+                    </StackPanel>
+                    <Grid x:Name="WallPanel" Grid.Row="1" DataContext="{Binding Source={StaticResource WallListData}}">
+                        <ListBox x:Name="wallListBox" ItemTemplate="{StaticResource WallListItem}">
+                        </ListBox>
+                    </Grid>
+                    <StackPanel>
+                        <TextBlock x:Name="WallError" Style="{StaticResource PhoneTextTitle2Style}" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Grid>
+            </controls:PivotItem>
+        </controls:Pivot>
+        <ProgressBar Height="4" HorizontalAlignment="Left" Margin="10,10,0,0" Name="progressBar1" VerticalAlignment="Top" Width="460" />
+    </Grid>
+
+    <!--Sample code showing usage of ApplicationBar-->
+    <!--<phone:PhoneApplicationPage.ApplicationBar>
+        <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True">
+            <shell:ApplicationBarIconButton x:Name="appbar_button1" IconUri="/Images/appbar_button1.png" Text="Button 1"/>
+            <shell:ApplicationBarIconButton x:Name="appbar_button2" IconUri="/Images/appbar_button2.png" Text="Button 2"/>
+            <shell:ApplicationBar.MenuItems>
+                <shell:ApplicationBarMenuItem x:Name="menuItem1" Text="MenuItem 1"/>
+                <shell:ApplicationBarMenuItem x:Name="menuItem2" Text="MenuItem 2"/>
+            </shell:ApplicationBar.MenuItems>
+        </shell:ApplicationBar>
+    </phone:PhoneApplicationPage.ApplicationBar>-->
+
+</phone:PhoneApplicationPage>

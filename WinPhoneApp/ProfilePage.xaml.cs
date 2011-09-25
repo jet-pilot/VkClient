@@ -666,5 +666,11 @@ namespace WinPhoneApp
             MyProfile item = ((FrameworkElement)sender).DataContext as MyProfile;
             NavigationService.Navigate(new Uri("/ProfilePage.xaml?uid=" + item.Uid, UriKind.Relative));
         }
+
+        private void NavigateToGroup(object sender, System.Windows.Input.GestureEventArgs e)
+        {
+            GroupItem item = ((FrameworkElement)sender).DataContext as GroupItem;
+            NavigationService.Navigate(new Uri("/GroupPage.xaml?gid=" + item.Gid, UriKind.Relative));
+        }
     }
 }

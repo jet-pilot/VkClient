@@ -23,12 +23,12 @@ namespace WinPhoneApp.Data.Group
         }
     }
 
-    public class SubscriptionList:ObservableCollection<MyProfile>
+    public class SubscriptionList : ObservableCollection<MyProfile>
     {
         public SubscriptionList()
             : base()
         {
-            
+
         }
     }
 
@@ -42,6 +42,11 @@ namespace WinPhoneApp.Data.Group
         private string _photo;
         private string _photoMedium;
         private string _photoBig;
+        private int _countMember;
+
+        public GroupItem()
+        {            
+        }
 
         public GroupItem(int gid, string name, string screenname, int isclosed, string type, string photo, string photomedium, string photobig)
         {
@@ -132,6 +137,16 @@ namespace WinPhoneApp.Data.Group
             {
                 _photoBig = value;
                 NotifyPropertyChanged("PhotoBig");
+            }
+        }
+
+        public int CountMember
+        {
+            get { return _countMember; }
+            set
+            {
+                _countMember = value;
+                NotifyPropertyChanged("CountMember");
             }
         }
 

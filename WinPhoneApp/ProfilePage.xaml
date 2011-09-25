@@ -43,6 +43,7 @@
         <album:AlbumList x:Key="AlbumListData" />
         <group:GroupList x:Key="GroupListData" />
         <group:SubscriptionList x:Key="SubscriptionListData" />
+        
         <DataTemplate x:Name="images">
             <StackPanel Orientation="Horizontal">
                 <Image Source="{Binding Src}" Stretch="None" Margin="5,5,5,5"/>
@@ -58,6 +59,7 @@
                 <MediaElement Source="{Binding Url}"/>
             </StackPanel>
         </DataTemplate>
+        
         <DataTemplate x:Name="WallListItem">
             <Grid Margin="0,0,0,18">
                 <Grid.ColumnDefinitions>
@@ -95,7 +97,7 @@
         </DataTemplate>
 
         <DataTemplate x:Name="GroupListItem">
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Tap="NavigateToGroup">
                 <Image Source="{Binding Photo}" Width="50" Height="50" />
                 <TextBlock Text="{Binding Name}" Margin="20" TextWrapping="Wrap" Style="{StaticResource PhoneTextTitle3Style}" />
             </StackPanel>
