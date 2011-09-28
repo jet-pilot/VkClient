@@ -44,14 +44,12 @@ namespace WinPhoneApp
         {
             base.OnNavigatedTo(e);
 
-            if (NavigationContext.QueryString.TryGetValue("uid", out Uid))
-            {
-                ListWallCallback();
-                ProfileCallback();
-                ListAlbumCallback();
-                GroupsCallback();
-                SubscriptionsCallback();
-            }
+            if (!NavigationContext.QueryString.TryGetValue("uid", out Uid)) return;
+            ListWallCallback();
+            ProfileCallback();
+            ListAlbumCallback();
+            GroupsCallback();
+            SubscriptionsCallback();
         }
 
         #region получаем стену

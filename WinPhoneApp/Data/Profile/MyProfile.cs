@@ -51,6 +51,7 @@ namespace WinPhoneApp.Data.Profile
             this._last_name = last_name;
             this._photo = photo;
             this._status = "";
+            this._full_name = this._first_name + " " + this._last_name;
         }
 
         public MyProfile(string first_name, string last_name, string photo, string mobile_phone, string home_phone)

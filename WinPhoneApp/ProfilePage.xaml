@@ -131,8 +131,10 @@
                                          LengthIndicatorVisible="False" />
                     </StackPanel>
                     <Grid x:Name="WallPanel" Grid.Row="1" DataContext="{Binding Source={StaticResource WallListData}}">
-                        <ListBox x:Name="wallListBox" ItemTemplate="{StaticResource WallListItem}">
-                        </ListBox>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="wallListBox" ItemTemplate="{StaticResource WallListItem}">
+                            </ItemsControl>
+                        </ScrollViewer>
                     </Grid>
                 </Grid>
             </controls:PivotItem>

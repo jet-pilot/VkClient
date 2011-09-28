@@ -10,7 +10,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
-
+using WinPhoneApp.Data.Friend;
 using WinPhoneApp.Data.Photo;
 
 namespace WinPhoneApp.Data.Feed
@@ -23,6 +23,7 @@ namespace WinPhoneApp.Data.Feed
         }
     }
 
+
     public class FeedItem : INotifyPropertyChanged
     {
         private string _author;
@@ -32,7 +33,23 @@ namespace WinPhoneApp.Data.Feed
         private PhotoItemList _image;
         private LinkItemList _link;
         private AudioItemList _audio;
+        private FriendList _friendList;
         private int _uid;
+
+        public FeedItem()
+        {
+            FriendList = new FriendList();
+        }
+        
+        public FriendList FriendList
+        {
+            get { return _friendList; }
+            set
+            {
+                _friendList = value;
+                NotifyPropertyChanged("FriendList");
+            }
+        }
 
         public AudioItemList Audio
         {
@@ -170,6 +187,5 @@ namespace WinPhoneApp.Data.Feed
 
         #endregion
     }
-
 
 }

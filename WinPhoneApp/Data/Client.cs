@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.Windows;
 using System.Windows.Controls;
@@ -8,6 +9,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
+using Newtonsoft.Json.Linq;
 using WinPhoneApp.Data.Auth;
 
 namespace WinPhoneApp.Data
@@ -72,7 +74,7 @@ namespace WinPhoneApp.Data
             this._active = false;
             this.OnActiveChanged();
         }
-
+        
         private void OnActiveChanged()
         {
             var handler = this.ActiveChanged;

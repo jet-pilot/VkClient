@@ -3,19 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using System.Xml.Linq;
 using Microsoft.Phone.Controls;
 using WinPhoneApp.Data.Feed;
-using WinPhoneApp.Data.Photo;
 using WinPhoneApp.Data;
 using Newtonsoft.Json.Linq;
 using WinPhoneApp.Data.Profile;
@@ -26,43 +19,41 @@ using System.Diagnostics;
 
 namespace WinPhoneApp
 {
-    public partial class MainPage : PhoneApplicationPage
+    public partial class MainPage
     {
-        private FeedList fl;
-        private FeedList wl;
-        private MyProfile mp;
-        ApplicationBarIconButton pict;
-        ApplicationBarIconButton camera;
-        string uploadUrl;
-        private byte[] buffer;
-        private BitmapImage bitmapImage;
-        private List<int> uidlist = new List<int>();
+        private FeedList _fl;
+        private FeedList _wl;
+        private MyProfile _mp;
+        ApplicationBarIconButton _pict;
+        ApplicationBarIconButton _camera;
+        private readonly List<int> _uidlist = new List<int>();
 
         public MainPage()
         {
             InitializeComponent();
-            this.Loaded += new RoutedEventHandler(MainPage_Loaded);
+            Loaded += MainPageLoaded;
         }
 
-        private void MainPage_Loaded(object sender, RoutedEventArgs e)
+        private void MainPageLoaded(object sender, RoutedEventArgs e)
         {
-            Client.Instance.ActiveChanged += new EventHandler(ClientActiveChanged);
-            this.UpdateUI();
+            Client.Instance.ActiveChanged += ClientActiveChanged;
+            UpdateUI();
 
-            pict = new ApplicationBarIconButton();
-            pict.IconUri = new Uri("/Images/appbar.cupcake.png", UriKind.RelativeOrAbsolute);
-            pict.Text = "фото";
-            pict.Click += pict_Click;
+            _pict = new ApplicationBarIconButton
+                        {IconUri = new Uri("/Images/appbar.cupcake.png", UriKind.RelativeOrAbsolute), Text = "фото"};
+            _pict.Click += PictClick;
 
-            camera = new ApplicationBarIconButton();
-            camera.IconUri = new Uri("/Images/appbar.feature.camera.rest.png", UriKind.RelativeOrAbsolute);
-            camera.Text = "камера";
-            camera.Click += camera_Click;
+            _camera = new ApplicationBarIconButton
+                          {
+                              IconUri = new Uri("/Images/appbar.feature.camera.rest.png", UriKind.RelativeOrAbsolute),
+                              Text = "камера"
+                          };
+            _camera.Click += CameraClick;
         }
 
         private void ClientActiveChanged(object sender, EventArgs e)
         {
-            this.Dispatcher.BeginInvoke(() => { this.UpdateUI(); });
+            Dispatcher.BeginInvoke(UpdateUI);
         }
 
         private void UpdateUI()
@@ -71,384 +62,362 @@ namespace WinPhoneApp
             if (!started) { NavigationService.Navigate(new Uri("/SignInPage.xaml", UriKind.Relative)); }
             else
             {
-                GetFeedList();
-                GetMyProfile();
-                GetWallList();
+                ListProfileCallback();
+                ListFeedsCallback();
+                ListWallCallback();
             }
         }
 
-        private FeedList GetFeedList()
-        {
-            if (fl != null)
-            {
-                return fl;
-            }
-            else
-            {
-                fl = new FeedList();
-                ListFeedsCallback();
-                //FeedPanel.DataContext = fl;
-                return fl;
-            }
-        }
 
         #region получаем новости
 
         private void ListFeedsCallback()
         {
-            HttpWebRequest web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/newsfeed.get?uid={0}&filters=post&count=20&access_token={1}", Client.Instance.Access_token.uid, Client.Instance.Access_token.token));
+            if (_fl != null) { return; }
+            _fl = new FeedList();
+            var web =
+                (HttpWebRequest)
+                WebRequest.Create(
+                    string.Format("https://api.vkontakte.ru/method/newsfeed.get?uid={0}&count=40&access_token={1}",
+                                  Client.Instance.Access_token.uid, Client.Instance.Access_token.token));
             web.Method = "POST";
             web.ContentType = "application/x-www-form-urlencoded";
-            web.BeginGetResponse(new AsyncCallback(ResponsePrepare), web);
+            web.BeginGetResponse(delegate(IAsyncResult e)
+                                     {
+                                         var request = (HttpWebRequest)e.AsyncState;
+                                         var response = (HttpWebResponse)request.EndGetResponse(e);
+                                         var responseReader = new StreamReader(response.GetResponseStream());
+                                         var responseString = responseReader.ReadToEnd();
+
+                                         try
+                                         {
+                                             var o = JObject.Parse(responseString);
+                                             var responseFeeds = (JArray)o["response"]["items"];
+                                             var responseProfiles = (JArray)o["response"]["profiles"];
+                                             var responseGroups = (JArray)o["response"]["groups"];
+
+                                             foreach (var feed in responseFeeds)
+                                             {
+                                                 switch ((string)feed["type"])
+                                                 {
+                                                     case "post":
+                                                         {
+                                                             var text = (string)feed["text"];
+                                                             var attachments = feed.SelectToken("attachments", false);
+                                                             if (text.Length > 100)
+                                                             {
+                                                                 text = text.Substring(0, 100);
+                                                             }
+                                                             var feedItem = new FeedItem
+                                                                                {
+                                                                                    Date = new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(Convert.ToDouble((int)feed["date"])),
+                                                                                    Text = text + "..."
+                                                                                };
+                                                             if ((string)feed["post_source"]["data"] == "profile_photo")
+                                                             {
+                                                                 feedItem.Text = "обновил(а) фотографию на странице";
+                                                             }
+                                                             else if (attachments != null)
+                                                             {
+                                                                 feedItem.Text = feedItem.Text + "\n + " + attachments.Count() + " файл.";
+                                                             }
+
+                                                             if ((int)feed["source_id"] > 0)
+                                                             {
+
+                                                                 var profile = responseProfiles.Single(c => (int)c["uid"] == (int)feed["source_id"]);
+                                                                 feedItem.Author = (string)profile["first_name"] + " " + (string)profile["last_name"];
+                                                                 feedItem.Avatar = (string)profile["photo"];
+                                                                 feedItem.Uid = (int) profile["uid"];
+                                                             }
+                                                             else
+                                                             {
+                                                                 var group = responseGroups.Single(c => (int)c["gid"] == Math.Abs((int)feed["source_id"]));
+                                                                 feedItem.Author = (string)group["name"];
+                                                                 feedItem.Avatar = (string)group["photo"];
+                                                             }
+                                                             _fl.Add(feedItem);
+                                                             break;
+                                                         }
+                                                     case "photo":
+                                                         {
+                                                             var profile =
+                                                                 responseProfiles.Single(
+                                                                     c => (int)c["uid"] == (int)feed["source_id"]);
+                                                             var feedItem = new FeedItem
+                                                                                {
+                                                                                    Author = (string)profile["first_name"] + " " + (string)profile["last_name"],
+                                                                                    Avatar = (string)profile["photo"],
+                                                                                    Text = "добавил(а) " + (int)feed["photos"][0] + " фот.",
+                                                                                    Date = new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(Convert.ToDouble((int)feed["date"]))
+                                                                                };
+                                                             _fl.Add(feedItem);
+                                                             break;
+                                                         }
+                                                     case "photo_tag":
+                                                         {
+                                                             var profile =
+                                                                 responseProfiles.Single(
+                                                                     c => (int)c["uid"] == (int)feed["source_id"]);
+                                                             var feedItem = new FeedItem
+                                                                                {
+                                                                                    Author = (string)profile["first_name"] + " " + (string)profile["last_name"],
+                                                                                    Avatar = (string)profile["photo"],
+                                                                                    Text = "отмечен(а) на " + (int)feed["photo_tags"][0] + " фот.",
+                                                                                    Date = new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(Convert.ToDouble((int)feed["date"])),
+                                                                                };
+                                                             _fl.Add(feedItem);
+                                                             break;
+                                                         }
+                                                     case "friend":
+                                                         {
+                                                             var user =
+                                                                 responseProfiles.Single(
+                                                                     c => (int)c["uid"] == (int)feed["source_id"]);
+                                                             var feedItem = new FeedItem
+                                                                                {
+                                                                                    Author = (string)user["first_name"] + " " + (string)user["last_name"],
+                                                                                    Avatar = (string)user["photo"],
+                                                                                    Date = new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(Convert.ToDouble((int)feed["date"])),
+                                                                                    Text = "добавил(а) в друзья: "
+                                                                                };
+                                                             var friendsAdd = (JArray)feed["friends"];
+                                                             for (var i = 1; i < friendsAdd.Count; i++)
+                                                             {
+                                                                 var friend =
+                                                                     responseProfiles.Single(c => (int)c["uid"] == (int)friendsAdd[i]["uid"]);
+                                                                 feedItem.FriendList.Add(
+                                                                     new MyProfile((string)friend["first_name"], (string)friend["last_name"], (string)friend["photo"]));
+                                                             }
+                                                             _fl.Add(feedItem);
+                                                             Debug.WriteLine(feedItem.FriendList.Count);
+                                                             break;
+                                                         }
+                                                     case "note":
+                                                         {
+                                                             break;
+                                                         }
+                                                     default:
+                                                         {
+                                                             new Exception("ТВОЮ МАТЬ!!!11");
+                                                             break;
+                                                         }
+                                                 }
+                                             }
+                                             Dispatcher.BeginInvoke(() =>
+                                                                        {
+                                                                            feedListBox.ItemsSource = _fl;
+                                                                            progressBar1.IsIndeterminate =
+                                                                                false;
+                                                                        });
+                                         }
+                                         catch (Exception exception)
+                                         {
+                                             Dispatcher.BeginInvoke(() =>
+                                                                             {
+                                                                                 MessageBox.Show(exception.Message);
+                                                                                 progressBar1.IsIndeterminate =
+                                                                                     false;
+                                                                             });
+                                         }
+                                     }, web);
             progressBar1.IsIndeterminate = true;
         }
 
-        private void ResponsePrepare(IAsyncResult e)
-        {
-            HttpWebRequest request = (HttpWebRequest)e.AsyncState;
-            HttpWebResponse response = (HttpWebResponse)request.EndGetResponse(e);
-
-            StreamReader responseReader = new StreamReader(response.GetResponseStream());
-
-            string responseStringfeed = responseReader.ReadToEnd();
-
-            try
-            {
-                JObject o = JObject.Parse(responseStringfeed);
-                JArray responseFeeds = (JArray)o["response"]["items"];
-                JArray responseProfiles = (JArray)o["response"]["profiles"];
-                foreach (var item in responseFeeds)
-                {
-                    DateTime date = new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(Convert.ToDouble((int)item["date"]));
-                    PhotoItemList pl = new PhotoItemList();
-                    LinkItemList ll = new LinkItemList();
-                    AudioItemList al = new AudioItemList();
-                    int uid = (int)item["source_id"];
-                    foreach (var user in responseProfiles)
-                    {
-                        var attachments = item.SelectToken("attachments", false);
-                        if ((int)user["uid"] == (int)item["source_id"])
-                        {
-                            string name = (string)user["first_name"] + " " + (string)user["last_name"];
-                            string avatar = (string)user["photo"];
-                            if (attachments != null)
-                            {
-                                foreach (var attachment in attachments)
-                                {
-                                    switch ((string)attachment["type"])
-                                    {
-                                        case "photo":
-                                            {
-                                                var image = attachment.SelectToken("photo", false);
-                                                if (image != null)
-                                                {
-                                                    pl.Add(new PhotoItem((int)image["pid"], (int)image["owner_id"], (string)image["src"], (string)image["src_big"]));
-                                                }
-
-                                                break;
-                                            }
-                                        case "link":
-                                            {
-                                                var link = attachment.SelectToken("link", false);
-                                                if (link != null)
-                                                {
-                                                    ll.Add(new LinkItem((string)link["url"], (string)link["title"], (string)link["description"], (string)link["image_src"]));
-                                                }
-                                                break;
-                                            }
-                                        case "audio":
-                                            {
-                                                var audio = attachment.SelectToken("audio", false);
-                                                if (audio != null)
-                                                {
-                                                    al.Add(new AudioItem());
-                                                }
-                                                break;
-                                            }
-                                    }
-                                }
-                                fl.Add(new FeedItem(name, avatar, (string)item["text"], date, pl, ll, al, uid));
-                            }
-                            else
-                            {
-                                fl.Add(new FeedItem(name, avatar, (string)item["text"], date, uid));
-                            }
-
-                        }
-                    }
-                }
-                this.Dispatcher.BeginInvoke(() =>
-                {
-                    feedListBox.ItemsSource = fl;
-
-                    progressBar1.IsIndeterminate = false;
-
-                });
-            }
-            catch
-            {
-                this.Dispatcher.BeginInvoke(() => { MessageBox.Show("Новости не загрузились"); progressBar1.IsIndeterminate = false; });
-            }
-
-
-        }
         #endregion
-
-
-        private FeedList GetWallList()
-        {
-            if (wl != null)
-            {
-                return wl;
-            }
-            else
-            {
-                wl = new FeedList();
-                ListWallCallback();
-                //FeedPanel.DataContext = fl;
-                return wl;
-            }
-        }
 
         #region получаем стену
 
         private void ListWallCallback()
         {
-            HttpWebRequest web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/wall.get?uid={0}&count=20&access_token={1}", Client.Instance.Access_token.uid, Client.Instance.Access_token.token));
+            if (_wl != null) { return; }
+            _wl=new FeedList();
+            var web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/wall.get?uid={0}&count=20&access_token={1}", Client.Instance.Access_token.uid, Client.Instance.Access_token.token));
             web.Method = "POST";
             web.ContentType = "application/x-www-form-urlencoded";
-            web.BeginGetResponse(new AsyncCallback(ResponsePrepareWall), web);
+            web.BeginGetResponse(delegate(IAsyncResult e)
+                                     {
+                                         var request = (HttpWebRequest)e.AsyncState;
+                                         var response = (HttpWebResponse)request.EndGetResponse(e);
+                                         var responseReader = new StreamReader(response.GetResponseStream());
+                                         var responseString = responseReader.ReadToEnd();
+
+                                         try
+                                         {
+                                             var o = JObject.Parse(responseString);
+                                             var responseFeeds = (JArray)o["response"];
+                                             for (int i = 1; i < responseFeeds.Count; i++)
+                                             {
+                                                 var text = (string)responseFeeds[i]["text"];
+                                                 var attachments = responseFeeds[i].SelectToken("attachments", false);
+                                                 if (text.Length > 100)
+                                                 {
+                                                     text = text.Substring(0, 100);
+                                                 }
+                                                 var wallItem = new FeedItem
+                                                                    {
+                                                                        Date = new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(Convert.ToDouble((int)responseFeeds[i]["date"])),
+                                                                        Text = text + "...",
+                                                                        Uid = (int)responseFeeds[i]["from_id"]
+                                                                    };
+                                                 if ((string)responseFeeds[i]["post_source"]["data"] == "profile_photo")
+                                                 {
+                                                     wallItem.Text = "обновил(а) фотографию на странице";
+                                                 }
+                                                 else if (attachments != null)
+                                                 {
+                                                     wallItem.Text = wallItem.Text + "\n + " + attachments.Count() + " файл.";
+                                                 }
+                                                 _wl.Add(wallItem);
+                                                 _uidlist.Add((int)responseFeeds[i]["from_id"]);
+                                                     
+                                             }
+                                             Dispatcher.BeginInvoke(() =>
+                                                                        {
+                                                                            ListProfileWallCallback();
+                                                                            progressBar1.IsIndeterminate = false;
+                                                                        });
+
+                                         }
+                                         catch (Exception exception)
+                                         {
+                                             Dispatcher.BeginInvoke(() => { MessageBox.Show(exception.Message); progressBar1.IsIndeterminate = false; });
+                                         }
+                                     }, web);
             progressBar1.IsIndeterminate = true;
-        }
-
-        private void ResponsePrepareWall(IAsyncResult e)
-        {
-            HttpWebRequest request = (HttpWebRequest)e.AsyncState;
-            HttpWebResponse response = (HttpWebResponse)request.EndGetResponse(e);
-
-            StreamReader responseReader = new StreamReader(response.GetResponseStream());
-
-            try
-            {
-                string responseString = responseReader.ReadToEnd();
-                JObject o = JObject.Parse(responseString);
-                JArray responseFeeds = (JArray)o["response"];
-                for (int i = 1; i < responseFeeds.Count;i++ )
-                {
-                    DateTime date = new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(Convert.ToDouble((int)responseFeeds[i]["date"]));
-                    PhotoItemList pl = new PhotoItemList();
-                    LinkItemList ll = new LinkItemList();
-                    AudioItemList al = new AudioItemList();
-
-                    var attachments = responseFeeds[i].SelectToken("attachments", false);
-                    string name = " ";
-                    string avatar = "http://cs5425.vk.com/u27309041/e_0bf7e5d5.jpg";
-                    int uid = (int)responseFeeds[i]["from_id"];
-                    if (attachments != null)
-                    {
-                        foreach (var attachment in attachments)
-                        {
-                            switch ((string)attachment["type"])
-                            {
-                                case "photo":
-                                    {
-                                        var image = attachment.SelectToken("photo", false);
-                                        if (image != null)
-                                        {
-                                            pl.Add(new PhotoItem((int)image["pid"], (int)image["owner_id"], (string)image["src"], (string)image["src_big"]));
-                                        }
-
-                                        break;
-                                    }
-                                case "link":
-                                    {
-                                        var link = attachment.SelectToken("link", false);
-                                        if (link != null)
-                                        {
-                                            ll.Add(new LinkItem((string)link["url"], (string)link["title"], (string)link["description"], (string)link["image_src"]));
-                                        }
-                                        break;
-                                    }
-                                case "audio":
-                                    {
-                                        var audio = attachment.SelectToken("audio", false);
-                                        if (audio != null)
-                                        {
-                                            al.Add(new AudioItem());
-                                        }
-                                        break;
-                                    }
-                            }
-                        }
-                        wl.Add(new FeedItem(name, avatar, (string)responseFeeds[i]["text"], date, pl, ll, al, uid));
-                        this.uidlist.Add((int)responseFeeds[i]["from_id"]);
-                    }
-                    else
-                    {
-                        wl.Add(new FeedItem(name, avatar, (string)responseFeeds[i]["text"], date, uid));
-                        this.uidlist.Add((int)responseFeeds[i]["from_id"]);
-                    }
-                }
-                this.Dispatcher.BeginInvoke(() =>
-                {
-                    ListProfileWallCallback();
-                    this.progressBar1.IsIndeterminate = false;
-                });
-                
-            }
-            catch
-            {
-                this.Dispatcher.BeginInvoke(() => { MessageBox.Show("Сообщения стены не загрузились"); progressBar1.IsIndeterminate = false; });
-            }
         }
 
         private void ListProfileWallCallback()
         {
-            string requestString = string.Format("https://api.vkontakte.ru/method/getProfiles?access_token={0}&fields=photo&uids=", Client.Instance.Access_token.token);
-            foreach (var item in this.uidlist)
-            {
-                requestString += "," + item;
-            }
-            HttpWebRequest web = (HttpWebRequest)WebRequest.Create(requestString);
+            var requestString = string.Format("https://api.vkontakte.ru/method/getProfiles?access_token={0}&fields=photo&uids=", Client.Instance.Access_token.token);
+            requestString = _uidlist.Aggregate(requestString, (current, item) => current + ("," + item));
+            var web = (HttpWebRequest)WebRequest.Create(requestString);
             web.Method = "POST";
             web.ContentType = "application/x-www-form-urlencoded";
-            web.BeginGetResponse(new AsyncCallback(ResponcePrepareProfileWall), web);
-            this.progressBar1.IsIndeterminate = true;
-        }
-        public void ResponcePrepareProfileWall(IAsyncResult e)
-        {
-            HttpWebRequest request = (HttpWebRequest)e.AsyncState;
-            HttpWebResponse response = (HttpWebResponse)request.EndGetResponse(e);
+            web.BeginGetResponse(delegate(IAsyncResult e)
+                                     {
+                                         var request = (HttpWebRequest)e.AsyncState;
+                                         var response = (HttpWebResponse)request.EndGetResponse(e);
+                                         var responseReader = new StreamReader(response.GetResponseStream());
 
-            StreamReader responseReader = new StreamReader(response.GetResponseStream());
-
-            try
-            {
-                string responseStringStatus = responseReader.ReadToEnd();
-                JObject o = JObject.Parse(responseStringStatus);
-                JArray responseArray = (JArray)o["response"];
-                foreach (var item in wl)
-                {
-                    foreach (var uid in responseArray)
-                    {
-                        if (item.Uid == (int)uid["uid"]) { item.Author = uid["first_name"] + " " + uid["last_name"]; item.Avatar = (string)uid["photo"]; break; }
-                    }
-                }
-                this.Dispatcher.BeginInvoke(() => { this.wallListBox.ItemsSource = wl; this.progressBar1.IsIndeterminate = false; });
-            }
-            catch
-            {
-
-            }
+                                         try
+                                         {
+                                             var responseStringStatus = responseReader.ReadToEnd();
+                                             var o = JObject.Parse(responseStringStatus);
+                                             var responseArray = (JArray)o["response"];
+                                             foreach (var item in _wl)
+                                             {
+                                                 var item1 = item;
+                                                 foreach (var uid in responseArray.Where(uid => item1.Uid == (int)uid["uid"]))
+                                                 {
+                                                     item.Author = uid["first_name"] + " " + uid["last_name"]; item.Avatar = (string)uid["photo"]; break;
+                                                 }
+                                             }
+                                             Dispatcher.BeginInvoke(() => { wallListBox.ItemsSource = _wl; progressBar1.IsIndeterminate = false; });
+                                         }
+                                         catch (Exception exception)
+                                         {
+                                             Dispatcher.BeginInvoke(() => MessageBox.Show(exception.Message));
+                                         }
+                                     }, web);
+            progressBar1.IsIndeterminate = true;
         }
 
 
         #endregion
 
-        private MyProfile GetMyProfile()
-        {
-            if (mp != null)
-            {
-                return mp;
-            }
-            else
-            {
-                mp = new MyProfile();
-                ListProfileCallback();
-                ListStatusCallback();
-                //MyProfilePanel.DataContext = mp;
-                return mp;
-            }
-
-        }
 
         #region получаем профиль
 
         private void ListProfileCallback()
         {
-            HttpWebRequest web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/getProfiles?fields=photo&uid={0}&access_token={1}", Client.Instance.Access_token.uid, Client.Instance.Access_token.token));
+            if (_mp != null) { return; }
+            _mp = new MyProfile();
+            var web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/getProfiles?fields=photo&uid={0}&access_token={1}", Client.Instance.Access_token.uid, Client.Instance.Access_token.token));
             web.Method = "POST";
             web.ContentType = "application/x-www-form-urlencoded";
-            web.BeginGetResponse(new AsyncCallback(ResponsePrepareProfile), web);
+            web.BeginGetResponse(ResponsePrepareProfile, web);
             progressBar1.IsIndeterminate = true;
         }
 
         private void ResponsePrepareProfile(IAsyncResult e)
         {
-            HttpWebRequest request = (HttpWebRequest)e.AsyncState;
-            HttpWebResponse response = (HttpWebResponse)request.EndGetResponse(e);
+            var request = (HttpWebRequest)e.AsyncState;
+            var response = (HttpWebResponse)request.EndGetResponse(e);
 
-            StreamReader responseReader = new StreamReader(response.GetResponseStream());
+            var responseReader = new StreamReader(response.GetResponseStream());
 
             try
             {
                 string responseStringprofile = responseReader.ReadToEnd();
-                JObject o = JObject.Parse(responseStringprofile);
-                JArray responseArray = (JArray)o["response"];
+                var o = JObject.Parse(responseStringprofile);
+                var responseArray = (JArray)o["response"];
 
-                mp = new MyProfile((string)responseArray[0]["first_name"], (string)responseArray[0]["last_name"], (string)responseArray[0]["photo"]);
-                this.Dispatcher.BeginInvoke(() =>
+                _mp = new MyProfile((string)responseArray[0]["first_name"], (string)responseArray[0]["last_name"], (string)responseArray[0]["photo"]);
+                Dispatcher.BeginInvoke(() =>
                     {
-                        ImageSource image = new BitmapImage(new Uri(mp.Photo));
-                        this.photo.Source = image;
-                        this.LF_name.Text = mp.First_name + " " + mp.Last_name;
+                        ImageSource image = new BitmapImage(new Uri(_mp.Photo));
+                        photo.Source = image;
+                        LF_name.Text = _mp.First_name + " " + _mp.Last_name;
                         progressBar1.IsIndeterminate = false;
+                        ListStatusCallback();
                     });
             }
             catch (Exception ex)
             {
-                this.Dispatcher.BeginInvoke(() => { MessageBox.Show(ex.Message); progressBar1.IsIndeterminate = false; });
+                Dispatcher.BeginInvoke(() => { MessageBox.Show(ex.Message); progressBar1.IsIndeterminate = false; });
             }
 
 
         }
 
-        #endregion
 
         private void ListStatusCallback()
         {
-            HttpWebRequest web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/status.get?uid={0}&access_token={1}", Client.Instance.Access_token.uid, Client.Instance.Access_token.token));
+            var web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/status.get?uid={0}&access_token={1}", Client.Instance.Access_token.uid, Client.Instance.Access_token.token));
             web.Method = "POST";
             web.ContentType = "application/x-www-form-urlencoded";
-            web.BeginGetResponse(new AsyncCallback(ResponcePrepareStatus), web);
+            web.BeginGetResponse(ResponcePrepareStatus, web);
             progressBar1.IsIndeterminate = true;
         }
         public void ResponcePrepareStatus(IAsyncResult e)
         {
-            HttpWebRequest request = (HttpWebRequest)e.AsyncState;
-            HttpWebResponse response = (HttpWebResponse)request.EndGetResponse(e);
+            var request = (HttpWebRequest)e.AsyncState;
+            var response = (HttpWebResponse)request.EndGetResponse(e);
 
-            StreamReader responseReader = new StreamReader(response.GetResponseStream());
+            var responseReader = new StreamReader(response.GetResponseStream());
 
             try
             {
-                string responseStringStatus = responseReader.ReadToEnd();
-                JObject o = JObject.Parse(responseStringStatus);
-                this.Dispatcher.BeginInvoke(() =>
+                var responseStringStatus = responseReader.ReadToEnd();
+                var o = JObject.Parse(responseStringStatus);
+                Dispatcher.BeginInvoke(() =>
                     {
-                        this.Status.Text = (string)o["response"]["text"];
+                        Status.Text = (string)o["response"]["text"];
                     });
             }
             catch (Exception ex)
             {
-                this.Dispatcher.BeginInvoke(() => { MessageBox.Show(ex.Message); progressBar1.IsIndeterminate = false; });
+                Dispatcher.BeginInvoke(() => { MessageBox.Show(ex.Message); progressBar1.IsIndeterminate = false; });
             }
         }
 
-        private void Navigate_to_MessagePage(object sender, EventArgs e)
+        #endregion
+        private void NavigateToMessagePage(object sender, EventArgs e)
         {
             NavigationService.Navigate(new Uri("/MessagesPage.xaml", UriKind.Relative));
         }
 
-        private void Navigate_to_FriendListPage(object sender, EventArgs e)
+        private void NavigateToFriendListPage(object sender, EventArgs e)
         {
             NavigationService.Navigate(new Uri("/FriendListPage.xaml", UriKind.Relative));
         }
 
         private void NavigateToProfile(object sender, System.Windows.Input.GestureEventArgs e)
         {
-            FeedItem item = ((FrameworkElement)sender).DataContext as FeedItem;
-            NavigationService.Navigate(new Uri("/ProfilePage.xaml?uid=" + item.Uid, UriKind.Relative));
+            var item = ((FrameworkElement)sender).DataContext as FeedItem;
+            if (item != null)
+                NavigationService.Navigate(new Uri("/ProfilePage.xaml?uid=" + item.Uid, UriKind.Relative));
         }
 
         protected override void OnBackKeyPress(CancelEventArgs e)
@@ -460,16 +429,16 @@ namespace WinPhoneApp
             }
         }
 
-        private void HyperlinkButton_Click(object sender, RoutedEventArgs e)
+        private void HyperlinkButtonClick(object sender, RoutedEventArgs e)
         {
             var wbt = new WebBrowserTask();
-            HyperlinkButton btn = (HyperlinkButton)e.OriginalSource;
+            var btn = (HyperlinkButton)e.OriginalSource;
             wbt.Uri = btn.NavigateUri;
             wbt.Show();
         }
 
         #region отправка сообщения на стену
-        private void Post_send(object sender, EventArgs e)
+        private void PostSend(object sender, EventArgs e)
         {
             //GetWallUploadServerCallback();
             if (PostBox.Text.Length > 0)
@@ -478,70 +447,54 @@ namespace WinPhoneApp
             }
             else
             {
-                this.Dispatcher.BeginInvoke(
-                    () => MessageBox.Show("Невозможно отправить пустое сообщение, напишите хоть что-нибудь"));
-            }
-        }
-
-        private void WallPostSend(object sender, EventArgs e)
-        {
-            //GetWallUploadServerCallback();
-            if (WallPostBox.Text.Length > 0)
-            {
-                PostSendCallback(WallPostBox.Text);
-                
-            }
-            else
-            {
-                this.Dispatcher.BeginInvoke(
+                Dispatcher.BeginInvoke(
                     () => MessageBox.Show("Невозможно отправить пустое сообщение, напишите хоть что-нибудь"));
             }
         }
 
         private void PostSendCallback(string message)
         {
-            HttpWebRequest web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/wall.post?owner_id={0}&message={1}&access_token={2}", Client.Instance.Access_token.uid, message, Client.Instance.Access_token.token));
+            var web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/wall.post?owner_id={0}&message={1}&access_token={2}", Client.Instance.Access_token.uid, message, Client.Instance.Access_token.token));
             web.Method = "POST";
             web.ContentType = "application/x-www-form-urlencoded";
-            web.BeginGetResponse(new AsyncCallback(ResponcePreparePost), web);
+            web.BeginGetResponse(ResponcePreparePost, web);
             progressBar1.IsIndeterminate = true;
         }
         public void ResponcePreparePost(IAsyncResult e)
         {
-            HttpWebRequest request = (HttpWebRequest)e.AsyncState;
-            HttpWebResponse response = (HttpWebResponse)request.EndGetResponse(e);
+            var request = (HttpWebRequest)e.AsyncState;
+            var response = (HttpWebResponse)request.EndGetResponse(e);
 
-            StreamReader responseReader = new StreamReader(response.GetResponseStream());
+            var responseReader = new StreamReader(response.GetResponseStream());
 
             string responseString = responseReader.ReadToEnd();
 
             try
             {
-                JObject o = JObject.Parse(responseString);
-                this.Dispatcher.BeginInvoke(() =>
+                var o = JObject.Parse(responseString);
+                Dispatcher.BeginInvoke(() =>
                 {
-                    int post_id = (int)o["response"]["post_id"];
-                    Debug.WriteLine(post_id.ToString());
+                    var postId = (int)o["response"]["post_id"];
+                    Debug.WriteLine(postId.ToString());
                     PostBox.Text = "";
-                    WallPostBox.Text = "";
                     progressBar1.IsIndeterminate = false;
                 });
             }
             catch (Exception ex)
             {
-                this.Dispatcher.BeginInvoke(() => { MessageBox.Show(ex.Message); });
+                Dispatcher.BeginInvoke(() => MessageBox.Show(ex.Message));
             }
         }
         #endregion
 
-        private void PostBox_GotFocus(object sender, RoutedEventArgs e)
+        private void PostBoxGotFocus(object sender, RoutedEventArgs e)
         {
             ApplicationBar.Mode = ApplicationBarMode.Default;
-            ApplicationBar.Buttons.Add(pict);
-            ApplicationBar.Buttons.Add(camera);
+            ApplicationBar.Buttons.Add(_pict);
+            ApplicationBar.Buttons.Add(_camera);
         }
 
-        private void PostBox_LostFocus(object sender, RoutedEventArgs e)
+        private void PostBoxLostFocus(object sender, RoutedEventArgs e)
         {
             while (ApplicationBar.Buttons.Count > 0)
             {
@@ -554,129 +507,58 @@ namespace WinPhoneApp
         {
             if (e.TaskResult == TaskResult.OK)
             {
-                BitmapImage bmp = new BitmapImage();
-                bmp.SetSource(e.ChosenPhoto);
-                bitmapImage = bmp;
-
-                using (Stream filestream = e.ChosenPhoto)
-                {
-                    buffer = new byte[filestream.Length];
-                    filestream.Read(buffer, 0, (int)filestream.Length);
-                    Debug.WriteLine(buffer.Length);
-                }
-
-
-                PostAttachments.Items.Add(bmp);
-                PostBox.Focus();
+                
             }
         }
 
-        void pict_Click(object sender, EventArgs e)
+        void PictClick(object sender, EventArgs e)
         {
-            PhotoChooserTask pct = new PhotoChooserTask();
-            pct.Completed += new EventHandler<PhotoResult>(pct_Completed);
+            var pct = new PhotoChooserTask();
+            pct.Completed += pct_Completed;
             pct.Show();
         }
 
-        void camera_Click(object sender, EventArgs e)
+        void CameraClick(object sender, EventArgs e)
         {
-            CameraCaptureTask pct = new CameraCaptureTask();
-            pct.Completed += new EventHandler<PhotoResult>(pct_Completed);
+            var pct = new CameraCaptureTask();
+            pct.Completed += pct_Completed;
             pct.Show();
         }
 
         #region получаем ссылку для загрузки
 
+/*
         private void GetWallUploadServerCallback()
         {
-            HttpWebRequest web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/photos.getWallUploadServer?uid={0}&access_token={1}", Client.Instance.Access_token.uid, Client.Instance.Access_token.token));
+            var web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/photos.getWallUploadServer?uid={0}&access_token={1}", Client.Instance.Access_token.uid, Client.Instance.Access_token.token));
             web.Method = "POST";
             web.ContentType = "application/x-www-form-urlencoded";
-            web.BeginGetResponse(new AsyncCallback(ResponcePrepareGetWallUploadServer), web);
+            web.BeginGetResponse(ResponcePrepareGetWallUploadServer, web);
             progressBar1.IsIndeterminate = true;
         }
+
         private void ResponcePrepareGetWallUploadServer(IAsyncResult e)
         {
-            HttpWebRequest request = (HttpWebRequest)e.AsyncState;
-            HttpWebResponse response = (HttpWebResponse)request.EndGetResponse(e);
+            var request = (HttpWebRequest)e.AsyncState;
+            var response = (HttpWebResponse)request.EndGetResponse(e);
 
-            StreamReader responseReader = new StreamReader(response.GetResponseStream());
-
-            string responseString = responseReader.ReadToEnd();
-
-            try
-            {
-                JObject o = JObject.Parse(responseString);
-                uploadUrl = (string)o["response"]["upload_url"];
-                Debug.WriteLine(uploadUrl);
-                UploadCallback(uploadUrl, buffer);
-            }
-            catch (Exception ex)
-            {
-                this.Dispatcher.BeginInvoke(() => { MessageBox.Show(ex.Message); progressBar1.IsIndeterminate = false; });
-            }
-        }
-
-        #endregion
-
-
-        #region заливаем на сервер
-
-        private void UploadCallback(string url, byte[] data)
-        {
-            HttpWebRequest web = (HttpWebRequest)WebRequest.Create(url);
-            web.Method = "POST";
-            web.ContentType = "application/x-www-form-urlencoded";
-            web.BeginGetRequestStream(new AsyncCallback(GetRequestStreamCallback), web);
-            progressBar1.IsIndeterminate = true;
-        }
-
-        private void GetRequestStreamCallback(IAsyncResult asynchronousResult)
-        {
-            HttpWebRequest request = (HttpWebRequest)asynchronousResult.AsyncState;
-
-            // End the operation
-            Stream postStream = request.EndGetRequestStream(asynchronousResult);
-
-            string postData = "photo=";
-            byte[] postdata = Encoding.UTF8.GetBytes(postData);
-
-            byte[] byteArray = new byte[postdata.Length + buffer.Length];
-            Array.Copy(postdata, 0, byteArray, 0, postdata.Length);
-            Array.Copy(buffer, 0, byteArray, postdata.Length, buffer.Length);
-
-            // Write to the request stream.
-            
-            postStream.Write(postdata, 0, postdata.Length);
-            Debug.WriteLine(postStream.Length);
-            postStream.Close();
-
-            // Start the asynchronous operation to get the response
-            request.BeginGetResponse(new AsyncCallback(ResponceUpload), request);
-        }
-
-        private void ResponceUpload(IAsyncResult e)
-        {
-            HttpWebRequest request = (HttpWebRequest)e.AsyncState;
-            HttpWebResponse response = (HttpWebResponse)request.EndGetResponse(e);
-
-            StreamReader responseReader = new StreamReader(response.GetResponseStream());
+            var responseReader = new StreamReader(response.GetResponseStream());
 
             string responseString = responseReader.ReadToEnd();
 
             try
             {
-                JObject o = JObject.Parse(responseString);
-                Debug.WriteLine("ответ сервера: ");
-                Debug.WriteLine(o.ToString());
+                var o = JObject.Parse(responseString);
+                _uploadUrl = (string)o["response"]["upload_url"];
+                Debug.WriteLine(_uploadUrl);
             }
             catch (Exception ex)
             {
-                this.Dispatcher.BeginInvoke(() => { MessageBox.Show(ex.Message); progressBar1.IsIndeterminate = false; });
+                Dispatcher.BeginInvoke(() => { MessageBox.Show(ex.Message); progressBar1.IsIndeterminate = false; });
             }
         }
+*/
 
         #endregion
-
     }
 }

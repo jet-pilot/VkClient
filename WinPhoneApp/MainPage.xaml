@@ -8,7 +8,6 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:data="clr-namespace:WinPhoneApp.Data.Feed"
-    xmlns:photos="clr-namespace:WinPhoneApp.Data.Photo"
     xmlns:myprofile="clr-namespace:WinPhoneApp.Data.Profile"
     xmlns:toolkit="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone.Controls.Toolkit"
     mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="728"
@@ -42,7 +41,6 @@
     <phone:PhoneApplicationPage.Resources>
         <data:FeedList x:Key="FeedListData"/>
         <myprofile:MyProfile x:Key="MyProfileData"/>
-        <toolkit:RelativeTimeConverter x:Key="RelativeTimeConverter"/>
         <DataTemplate x:Name="images">
             <StackPanel Orientation="Horizontal">
                 <Image Source="{Binding Src}" Stretch="None" Margin="5,5,5,5"/>
@@ -50,12 +48,17 @@
         </DataTemplate>
         <DataTemplate x:Name="links">
             <StackPanel>
-                <HyperlinkButton Content="{Binding Title}" NavigateUri="{Binding Url}"  Click="HyperlinkButton_Click" Cursor="Hand" />
+                <HyperlinkButton Content="{Binding Title}" NavigateUri="{Binding Url}"  Click="HyperlinkButtonClick" Cursor="Hand" />
             </StackPanel>
         </DataTemplate>
         <DataTemplate x:Name="audios">
             <StackPanel>
                 <MediaElement Source="{Binding Url}"/>
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Name="friends">
+            <StackPanel>
+                <TextBlock Text="{Binding Full_name}" Style="{StaticResource PhoneTextTitle3Style}"/>
             </StackPanel>
         </DataTemplate>
         <DataTemplate x:Name="FeedListItem">
@@ -68,14 +71,15 @@
                 <Image x:Name="photo" Source="{Binding Avatar}" Grid.Column="0" VerticalAlignment="Top" Margin="20,20,10,0" Width="50" Height="50"/>
                 <StackPanel Grid.Column="1">
                     <StackPanel Orientation="Horizontal" Tap="NavigateToProfile">
-                        <TextBlock x:Name="author" Text="{Binding Author}" Margin="0,0,0,0" TextWrapping="Wrap" FontSize="32" />
+                        <TextBlock x:Name="author" Text="{Binding Author}" Margin="12,0,0,0" TextWrapping="Wrap" Style="{StaticResource PhoneTextTitle2Style}"/>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <!--<TextBlock Text="{Binding Date,Converter={StaticResource RelativeTimeConverter}}" TextWrapping="Wrap" FontSize="21.333" Foreground="{StaticResource PhoneSubtleBrush}"/>-->
-                        <TextBlock Text="{Binding Text}" TextWrapping="Wrap" FontSize="21.333"/>
-                        <ItemsControl ItemTemplate="{StaticResource images}" ItemsSource="{Binding Image}"/>
+                        <TextBlock Text="{Binding Text}" TextWrapping="Wrap" Style="{StaticResource PhoneTextNormalStyle}" />
+                        <!--<ItemsControl ItemTemplate="{StaticResource images}" ItemsSource="{Binding Image}"/>
                         <ItemsControl ItemTemplate="{StaticResource links}" ItemsSource="{Binding Link}"/>
-                        <ItemsControl ItemTemplate="{StaticResource audios}" ItemsSource="{Binding Audio}"/>
+                        <ItemsControl ItemTemplate="{StaticResource audios}" ItemsSource="{Binding Audio}"/>-->
+                        <ItemsControl ItemTemplate="{StaticResource friends}" ItemsSource="{Binding FriendList}" />
+                        <TextBlock Text="{Binding Date}" TextWrapping="Wrap" Foreground="{StaticResource PhoneSubtleBrush}" Style="{StaticResource PhoneTextSubtleStyle}" />
                     </StackPanel>
                 </StackPanel>
             </Grid>
@@ -87,9 +91,9 @@
 
     <!--LayoutRoot contains the root grid where all other page content is placed-->
     <Grid x:Name="LayoutRoot">
-        <controls:Panorama>
+        <controls:Panorama Title="вконтакте">
             <!--Panorama item one-->
-            <controls:PanoramaItem Header="профиль">
+            <controls:PanoramaItem>
                 <Grid x:Name="MyProfilePanel" DataContext="{Binding Source={StaticResource MyProfileData}}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -108,7 +112,7 @@
             </controls:PanoramaItem>
 
             <!--Panorama item two-->
-            <controls:PanoramaItem Header="новости">
+            <controls:PanoramaItem>
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -119,15 +123,16 @@
                                          Hint="Что нового?" 
                                          Grid.Row="0"
                                          ActionIcon="/Images/appbar.message.send.png"
-                                         ActionIconTapped="Post_send"
-                                         GotFocus="PostBox_GotFocus"
-                                         LostFocus="PostBox_LostFocus"
+                                         ActionIconTapped="PostSend"
+                                         GotFocus="PostBoxGotFocus"
+                                         LostFocus="PostBoxLostFocus"
                                          LengthIndicatorVisible="False" />
-                        <ItemsControl x:Name="PostAttachments" ItemTemplate="{StaticResource PostAttachmentImage}"/>
                     </StackPanel>
                     <Grid x:Name="FeedPanel" Grid.Row="1" DataContext="{Binding Source={StaticResource FeedListData}}">
-                        <ListBox x:Name="feedListBox" ItemTemplate="{StaticResource FeedListItem}">
-                        </ListBox>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="feedListBox" ItemTemplate="{StaticResource FeedListItem}">
+                            </ItemsControl>
+                        </ScrollViewer>
                     </Grid>
                 </Grid>
 
@@ -139,20 +144,11 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <StackPanel Orientation="Vertical">
-                        <toolkit:PhoneTextBox x:Name="WallPostBox" 
-                                         Hint="Что нового?" 
-                                         Grid.Row="0"
-                                         ActionIcon="/Images/appbar.message.send.png"
-                                         ActionIconTapped="WallPostSend"
-                                         GotFocus="PostBox_GotFocus"
-                                         LostFocus="PostBox_LostFocus"
-                                         LengthIndicatorVisible="False" />
-                        <ItemsControl x:Name="WallAttachments" ItemTemplate="{StaticResource PostAttachmentImage}"/>
-                    </StackPanel>
                     <Grid x:Name="WallPanel" Grid.Row="1" DataContext="{Binding Source={StaticResource FeedListData}}">
-                        <ListBox x:Name="wallListBox" ItemTemplate="{StaticResource FeedListItem}">
-                        </ListBox>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="wallListBox" ItemTemplate="{StaticResource FeedListItem}">
+                            </ItemsControl>
+                        </ScrollViewer>
                     </Grid>
                 </Grid>
             </controls:PanoramaItem>
@@ -166,8 +162,8 @@
     <phone:PhoneApplicationPage.ApplicationBar>
         <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True" Mode="Minimized">
             <shell:ApplicationBar.MenuItems>
-                <shell:ApplicationBarMenuItem x:Name="menuItem1" Text="сообщения" Click="Navigate_to_MessagePage"/>
-                <shell:ApplicationBarMenuItem x:Name="menuItem2" Text="друзья" Click="Navigate_to_FriendListPage"/>
+                <shell:ApplicationBarMenuItem x:Name="menuItem1" Text="сообщения" Click="NavigateToMessagePage"/>
+                <shell:ApplicationBarMenuItem x:Name="menuItem2" Text="друзья" Click="NavigateToFriendListPage"/>
             </shell:ApplicationBar.MenuItems>
         </shell:ApplicationBar>
     </phone:PhoneApplicationPage.ApplicationBar>
