@@ -11,6 +11,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using Newtonsoft.Json.Linq;
 using WinPhoneApp.Data.Auth;
+using WinPhoneApp.Data.Settings;
 
 namespace WinPhoneApp.Data
 {
@@ -45,6 +46,7 @@ namespace WinPhoneApp.Data
 
         private volatile bool _active;
         public AccessInfoBag Access_token = new AccessInfoBag();
+        public SettingsBag Settings = new SettingsBag();
 
         public bool Active
         {
@@ -67,6 +69,12 @@ namespace WinPhoneApp.Data
             this._active = true;
             this.OnActiveChanged();
             Access_token = AccessInfoStore.Load();
+            if (SettingsStore.Load() == null)
+            {
+                SettingsStore.SaveDefaults();
+            }
+            Settings = SettingsStore.Load();
+
         }
 
         public void Stop()
@@ -74,7 +82,7 @@ namespace WinPhoneApp.Data
             this._active = false;
             this.OnActiveChanged();
         }
-        
+
         private void OnActiveChanged()
         {
             var handler = this.ActiveChanged;

@@ -126,7 +126,11 @@ namespace WinPhoneApp.Data.Profile
         public string Photo
         {
             get { return _photo; }
-            set { _photo = value; NotifyPropertyChanged("Photo"); }
+            set
+            {
+                _photo = value == "http://vk.com/images/question_c.gif" ? "/Images/question_a.jpg" : value;
+                NotifyPropertyChanged("Photo");
+            }
         }
 
         public string Photo_medium

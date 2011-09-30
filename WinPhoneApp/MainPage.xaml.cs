@@ -5,9 +5,6 @@ using System.Linq;
 using System.Net;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using Microsoft.Phone.Controls;
 using WinPhoneApp.Data.Feed;
 using WinPhoneApp.Data;
 using Newtonsoft.Json.Linq;
@@ -39,8 +36,7 @@ namespace WinPhoneApp
             Client.Instance.ActiveChanged += ClientActiveChanged;
             UpdateUI();
 
-            _pict = new ApplicationBarIconButton
-                        {IconUri = new Uri("/Images/appbar.cupcake.png", UriKind.RelativeOrAbsolute), Text = "фото"};
+            _pict = new ApplicationBarIconButton { IconUri = new Uri("/Images/appbar.cupcake.png", UriKind.RelativeOrAbsolute), Text = "фото" };
             _pict.Click += PictClick;
 
             _camera = new ApplicationBarIconButton
@@ -78,7 +74,7 @@ namespace WinPhoneApp
             var web =
                 (HttpWebRequest)
                 WebRequest.Create(
-                    string.Format("https://api.vkontakte.ru/method/newsfeed.get?uid={0}&count=40&access_token={1}",
+                    string.Format("https://api.vk.com/method/newsfeed.get?uid={0}&count=20&access_token={1}",
                                   Client.Instance.Access_token.uid, Client.Instance.Access_token.token));
             web.Method = "POST";
             web.ContentType = "application/x-www-form-urlencoded";
@@ -95,7 +91,6 @@ namespace WinPhoneApp
                                              var responseFeeds = (JArray)o["response"]["items"];
                                              var responseProfiles = (JArray)o["response"]["profiles"];
                                              var responseGroups = (JArray)o["response"]["groups"];
-
                                              foreach (var feed in responseFeeds)
                                              {
                                                  switch ((string)feed["type"])
@@ -111,7 +106,8 @@ namespace WinPhoneApp
                                                              var feedItem = new FeedItem
                                                                                 {
                                                                                     Date = new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(Convert.ToDouble((int)feed["date"])),
-                                                                                    Text = text + "..."
+                                                                                    Text = text + "...",
+                                                                                    CntComments = "комментариев: " + (int)feed["comments"]["count"]
                                                                                 };
                                                              if ((string)feed["post_source"]["data"] == "profile_photo")
                                                              {
@@ -128,7 +124,7 @@ namespace WinPhoneApp
                                                                  var profile = responseProfiles.Single(c => (int)c["uid"] == (int)feed["source_id"]);
                                                                  feedItem.Author = (string)profile["first_name"] + " " + (string)profile["last_name"];
                                                                  feedItem.Avatar = (string)profile["photo"];
-                                                                 feedItem.Uid = (int) profile["uid"];
+                                                                 feedItem.Uid = (int)profile["uid"];
                                                              }
                                                              else
                                                              {
@@ -136,6 +132,9 @@ namespace WinPhoneApp
                                                                  feedItem.Author = (string)group["name"];
                                                                  feedItem.Avatar = (string)group["photo"];
                                                              }
+                                                             feedItem.PostId = (int)feed["post_id"];
+                                                             feedItem.Text = feedItem.Text.Replace("<br>", "\n");
+                                                             feedItem.Text = feedItem.Text.Replace("&quot;", "\"");
                                                              _fl.Add(feedItem);
                                                              break;
                                                          }
@@ -207,8 +206,8 @@ namespace WinPhoneApp
                                              Dispatcher.BeginInvoke(() =>
                                                                         {
                                                                             feedListBox.ItemsSource = _fl;
-                                                                            progressBar1.IsIndeterminate =
-                                                                                false;
+                                                                            if (!progressBar1.IsIndeterminate) return;
+                                                                            progressBar1.IsIndeterminate = false;
                                                                         });
                                          }
                                          catch (Exception exception)
@@ -216,12 +215,15 @@ namespace WinPhoneApp
                                              Dispatcher.BeginInvoke(() =>
                                                                              {
                                                                                  MessageBox.Show(exception.Message);
-                                                                                 progressBar1.IsIndeterminate =
-                                                                                     false;
+                                                                                 if (!progressBar1.IsIndeterminate) return;
+                                                                                 progressBar1.IsIndeterminate = false;
                                                                              });
                                          }
                                      }, web);
-            progressBar1.IsIndeterminate = true;
+            if (progressBar1.IsIndeterminate == false)
+            {
+                progressBar1.IsIndeterminate = true;
+            }
         }
 
         #endregion
@@ -231,8 +233,8 @@ namespace WinPhoneApp
         private void ListWallCallback()
         {
             if (_wl != null) { return; }
-            _wl=new FeedList();
-            var web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/wall.get?uid={0}&count=20&access_token={1}", Client.Instance.Access_token.uid, Client.Instance.Access_token.token));
+            _wl = new FeedList();
+            var web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vk.com/method/wall.get?uid={0}&count=20&access_token={1}", Client.Instance.Access_token.uid, Client.Instance.Access_token.token));
             web.Method = "POST";
             web.ContentType = "application/x-www-form-urlencoded";
             web.BeginGetResponse(delegate(IAsyncResult e)
@@ -258,7 +260,9 @@ namespace WinPhoneApp
                                                                     {
                                                                         Date = new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(Convert.ToDouble((int)responseFeeds[i]["date"])),
                                                                         Text = text + "...",
-                                                                        Uid = (int)responseFeeds[i]["from_id"]
+                                                                        Uid = (int)responseFeeds[i]["from_id"],
+                                                                        PostId = (int)responseFeeds[i]["id"],
+                                                                        CntComments = "комментариев: " + (int)responseFeeds[i]["comments"]["count"]
                                                                     };
                                                  if ((string)responseFeeds[i]["post_source"]["data"] == "profile_photo")
                                                  {
@@ -270,26 +274,34 @@ namespace WinPhoneApp
                                                  }
                                                  _wl.Add(wallItem);
                                                  _uidlist.Add((int)responseFeeds[i]["from_id"]);
-                                                     
+
                                              }
-                                             Dispatcher.BeginInvoke(() =>
-                                                                        {
-                                                                            ListProfileWallCallback();
-                                                                            progressBar1.IsIndeterminate = false;
-                                                                        });
+                                             Dispatcher.BeginInvoke(ListProfileWallCallback);
 
                                          }
                                          catch (Exception exception)
                                          {
-                                             Dispatcher.BeginInvoke(() => { MessageBox.Show(exception.Message); progressBar1.IsIndeterminate = false; });
+                                             Dispatcher.BeginInvoke(() =>
+                                                                        {
+                                                                            MessageBox.Show(exception.Message);
+                                                                            if (!progressBar1.IsIndeterminate) return;
+                                                                            progressBar1.IsIndeterminate = false;
+                                                                        });
                                          }
                                      }, web);
-            progressBar1.IsIndeterminate = true;
+            if (progressBar1.IsIndeterminate == false)
+            {
+                progressBar1.IsIndeterminate = true;
+            }
         }
 
         private void ListProfileWallCallback()
         {
-            var requestString = string.Format("https://api.vkontakte.ru/method/getProfiles?access_token={0}&fields=photo&uids=", Client.Instance.Access_token.token);
+            if (progressBar1.IsIndeterminate == false)
+            {
+                progressBar1.IsIndeterminate = true;
+            }
+            var requestString = string.Format("https://api.vk.com/method/getProfiles?access_token={0}&fields=photo&uids=", Client.Instance.Access_token.token);
             requestString = _uidlist.Aggregate(requestString, (current, item) => current + ("," + item));
             var web = (HttpWebRequest)WebRequest.Create(requestString);
             web.Method = "POST";
@@ -313,19 +325,26 @@ namespace WinPhoneApp
                                                      item.Author = uid["first_name"] + " " + uid["last_name"]; item.Avatar = (string)uid["photo"]; break;
                                                  }
                                              }
-                                             Dispatcher.BeginInvoke(() => { wallListBox.ItemsSource = _wl; progressBar1.IsIndeterminate = false; });
+                                             Dispatcher.BeginInvoke(() =>
+                                                                        {
+                                                                            wallListBox.ItemsSource = _wl;
+                                                                            if (progressBar1.IsIndeterminate) return;
+                                                                            progressBar1.IsIndeterminate = false;
+                                                                        });
                                          }
                                          catch (Exception exception)
                                          {
                                              Dispatcher.BeginInvoke(() => MessageBox.Show(exception.Message));
                                          }
                                      }, web);
-            progressBar1.IsIndeterminate = true;
+            if (progressBar1.IsIndeterminate == false)
+            {
+                progressBar1.IsIndeterminate = true;
+            }
         }
 
 
         #endregion
-
 
         #region получаем профиль
 
@@ -333,91 +352,100 @@ namespace WinPhoneApp
         {
             if (_mp != null) { return; }
             _mp = new MyProfile();
-            var web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/getProfiles?fields=photo&uid={0}&access_token={1}", Client.Instance.Access_token.uid, Client.Instance.Access_token.token));
+            var web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vk.com/method/getProfiles?fields=photo&uid={0}&access_token={1}", Client.Instance.Access_token.uid, Client.Instance.Access_token.token));
             web.Method = "POST";
             web.ContentType = "application/x-www-form-urlencoded";
-            web.BeginGetResponse(ResponsePrepareProfile, web);
-            progressBar1.IsIndeterminate = true;
+            web.BeginGetResponse(delegate(IAsyncResult e)
+                                     {
+                                         var request = (HttpWebRequest)e.AsyncState;
+                                         var response = (HttpWebResponse)request.EndGetResponse(e);
+
+                                         var responseReader = new StreamReader(response.GetResponseStream());
+
+                                         try
+                                         {
+                                             var responseStringprofile = responseReader.ReadToEnd();
+                                             var o = JObject.Parse(responseStringprofile);
+                                             var responseArray = (JArray)o["response"];
+
+                                             _mp = new MyProfile
+                                                       {
+                                                           Full_name = (string)responseArray[0]["first_name"] + " " + (string)responseArray[0]["last_name"],
+                                                           Photo = (string)responseArray[0]["photo"]
+                                                       };
+                                             Dispatcher.BeginInvoke(() =>
+                                             {
+                                                 StatusCallback();
+                                                 if (!progressBar1.IsIndeterminate) return;
+                                                 progressBar1.IsIndeterminate = false;
+                                             });
+                                         }
+                                         catch (Exception ex)
+                                         {
+                                             Dispatcher.BeginInvoke(() =>
+                                                                        {
+                                                                            MessageBox.Show(ex.Message);
+                                                                            if (!progressBar1.IsIndeterminate) return;
+                                                                            progressBar1.IsIndeterminate = false;
+                                                                        });
+                                         }
+                                     }, web);
+            if (progressBar1.IsIndeterminate == false)
+            {
+                progressBar1.IsIndeterminate = true;
+            }
         }
 
-        private void ResponsePrepareProfile(IAsyncResult e)
-        {
-            var request = (HttpWebRequest)e.AsyncState;
-            var response = (HttpWebResponse)request.EndGetResponse(e);
 
-            var responseReader = new StreamReader(response.GetResponseStream());
-
-            try
-            {
-                string responseStringprofile = responseReader.ReadToEnd();
-                var o = JObject.Parse(responseStringprofile);
-                var responseArray = (JArray)o["response"];
-
-                _mp = new MyProfile((string)responseArray[0]["first_name"], (string)responseArray[0]["last_name"], (string)responseArray[0]["photo"]);
-                Dispatcher.BeginInvoke(() =>
-                    {
-                        ImageSource image = new BitmapImage(new Uri(_mp.Photo));
-                        photo.Source = image;
-                        LF_name.Text = _mp.First_name + " " + _mp.Last_name;
-                        progressBar1.IsIndeterminate = false;
-                        ListStatusCallback();
-                    });
-            }
-            catch (Exception ex)
-            {
-                Dispatcher.BeginInvoke(() => { MessageBox.Show(ex.Message); progressBar1.IsIndeterminate = false; });
-            }
-
-
-        }
-
-
-        private void ListStatusCallback()
+        private void StatusCallback()
         {
             var web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/status.get?uid={0}&access_token={1}", Client.Instance.Access_token.uid, Client.Instance.Access_token.token));
             web.Method = "POST";
             web.ContentType = "application/x-www-form-urlencoded";
-            web.BeginGetResponse(ResponcePrepareStatus, web);
-            progressBar1.IsIndeterminate = true;
-        }
-        public void ResponcePrepareStatus(IAsyncResult e)
-        {
-            var request = (HttpWebRequest)e.AsyncState;
-            var response = (HttpWebResponse)request.EndGetResponse(e);
+            web.BeginGetResponse(delegate(IAsyncResult e)
+                                     {
+                                         var request = (HttpWebRequest)e.AsyncState;
+                                         var response = (HttpWebResponse)request.EndGetResponse(e);
 
-            var responseReader = new StreamReader(response.GetResponseStream());
+                                         var responseReader = new StreamReader(response.GetResponseStream());
 
-            try
+                                         try
+                                         {
+                                             var responseStringStatus = responseReader.ReadToEnd();
+                                             var o = JObject.Parse(responseStringStatus);
+                                             Dispatcher.BeginInvoke(() =>
+                                                                        {
+                                                                            _mp.Status = (string)o["response"]["text"];
+                                                                            MyProfilePanel.DataContext = _mp;
+                                                                            if (!progressBar1.IsIndeterminate) return;
+                                                                            progressBar1.IsIndeterminate = false;
+                                                                        });
+                                         }
+                                         catch (Exception ex)
+                                         {
+                                             Dispatcher.BeginInvoke(() => { MessageBox.Show(ex.Message); progressBar1.IsIndeterminate = false; });
+                                         }
+                                     }, web);
+            if (progressBar1.IsIndeterminate == false)
             {
-                var responseStringStatus = responseReader.ReadToEnd();
-                var o = JObject.Parse(responseStringStatus);
-                Dispatcher.BeginInvoke(() =>
-                    {
-                        Status.Text = (string)o["response"]["text"];
-                    });
-            }
-            catch (Exception ex)
-            {
-                Dispatcher.BeginInvoke(() => { MessageBox.Show(ex.Message); progressBar1.IsIndeterminate = false; });
+                progressBar1.IsIndeterminate = true;
             }
         }
 
         #endregion
-        private void NavigateToMessagePage(object sender, EventArgs e)
-        {
-            NavigationService.Navigate(new Uri("/MessagesPage.xaml", UriKind.Relative));
-        }
-
-        private void NavigateToFriendListPage(object sender, EventArgs e)
-        {
-            NavigationService.Navigate(new Uri("/FriendListPage.xaml", UriKind.Relative));
-        }
 
         private void NavigateToProfile(object sender, System.Windows.Input.GestureEventArgs e)
         {
             var item = ((FrameworkElement)sender).DataContext as FeedItem;
             if (item != null)
                 NavigationService.Navigate(new Uri("/ProfilePage.xaml?uid=" + item.Uid, UriKind.Relative));
+        }
+
+        private void NavigateToFeed(object sender, System.Windows.Input.GestureEventArgs e)
+        {
+            var item = ((FrameworkElement)sender).DataContext as FeedItem;
+            if (item != null)
+                NavigationService.Navigate(new Uri("/FeedPage.xaml?uid=" + item.Uid + "&post_id=" + item.PostId, UriKind.Relative));
         }
 
         protected override void OnBackKeyPress(CancelEventArgs e)
@@ -458,7 +486,10 @@ namespace WinPhoneApp
             web.Method = "POST";
             web.ContentType = "application/x-www-form-urlencoded";
             web.BeginGetResponse(ResponcePreparePost, web);
-            progressBar1.IsIndeterminate = true;
+            if (progressBar1.IsIndeterminate == false)
+            {
+                progressBar1.IsIndeterminate = true;
+            }
         }
         public void ResponcePreparePost(IAsyncResult e)
         {
@@ -489,7 +520,7 @@ namespace WinPhoneApp
 
         private void PostBoxGotFocus(object sender, RoutedEventArgs e)
         {
-            ApplicationBar.Mode = ApplicationBarMode.Default;
+            ApplicationBar.IsVisible = true;
             ApplicationBar.Buttons.Add(_pict);
             ApplicationBar.Buttons.Add(_camera);
         }
@@ -500,14 +531,14 @@ namespace WinPhoneApp
             {
                 ApplicationBar.Buttons.RemoveAt(0);
             }
-            ApplicationBar.Mode = ApplicationBarMode.Minimized;
+            ApplicationBar.IsVisible = false;
         }
 
         private void pct_Completed(object sender, PhotoResult e)
         {
             if (e.TaskResult == TaskResult.OK)
             {
-                
+
             }
         }
 
@@ -525,9 +556,24 @@ namespace WinPhoneApp
             pct.Show();
         }
 
+        private void NavigateToMessagePage(object sender, System.Windows.Input.GestureEventArgs e)
+        {
+            NavigationService.Navigate(new Uri("/MessagesPage.xaml", UriKind.Relative));
+        }
+
+        private void NavigateToFriendListPage(object sender, System.Windows.Input.GestureEventArgs e)
+        {
+            NavigationService.Navigate(new Uri("/FriendListPage.xaml", UriKind.Relative));
+        }
+
+        private void NavigateToSettingsPage(object sender, System.Windows.Input.GestureEventArgs e)
+        {
+            NavigationService.Navigate(new Uri("/SettingsPage.xaml", UriKind.Relative));
+        }
+
         #region получаем ссылку для загрузки
 
-/*
+        /*
         private void GetWallUploadServerCallback()
         {
             var web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/photos.getWallUploadServer?uid={0}&access_token={1}", Client.Instance.Access_token.uid, Client.Instance.Access_token.token));

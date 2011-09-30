@@ -80,7 +80,12 @@
     <Compile Include="Data\Photo\AlbumItem.cs" />
     <Compile Include="Data\Photo\PhotoItem.cs" />
     <Compile Include="Data\Profile\MyProfile.cs" />
+    <Compile Include="Data\Settings\SettingsBag.cs" />
+    <Compile Include="Data\Settings\SettingsStore.cs" />
     <Compile Include="Data\UnreadToBrushConverter.cs" />
+    <Compile Include="FeedPage.xaml.cs">
+      <DependentUpon>FeedPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="FriendListPage.xaml.cs">
       <DependentUpon>FriendListPage.xaml</DependentUpon>
     </Compile>
@@ -105,6 +110,9 @@
     <Compile Include="SendMessage.xaml.cs">
       <DependentUpon>SendMessage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="SettingsPage.xaml.cs">
+      <DependentUpon>SettingsPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="SignInPage.xaml.cs">
       <DependentUpon>SignInPage.xaml</DependentUpon>
     </Compile>
@@ -115,6 +123,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </ApplicationDefinition>
+    <Page Include="FeedPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="FriendListPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -147,6 +159,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="SettingsPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="SignInPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -173,6 +189,8 @@
     <Content Include="Images\ApplicationBar.Delete.png" />
     <Content Include="Images\ApplicationBar.Select.png" />
     <Resource Include="Images\MainBackground.jpg" />
+    <Content Include="Images\feed_question_a.jpg" />
+    <Content Include="Images\question_a.jpg" />
     <Content Include="Images\Search.png" />
     <Content Include="Microsoft.Phone.Controls.Toolkit.dll" />
     <Content Include="SplashScreenImage.jpg" />

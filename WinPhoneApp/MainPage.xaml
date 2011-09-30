@@ -10,7 +10,7 @@
     xmlns:data="clr-namespace:WinPhoneApp.Data.Feed"
     xmlns:myprofile="clr-namespace:WinPhoneApp.Data.Profile"
     xmlns:toolkit="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone.Controls.Toolkit"
-    mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="728"
+    mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="800"
     FontFamily="{StaticResource PhoneFontFamilyNormal}"
     FontSize="{StaticResource PhoneFontSizeNormal}"
     Foreground="{StaticResource PhoneForegroundBrush}"
@@ -41,19 +41,9 @@
     <phone:PhoneApplicationPage.Resources>
         <data:FeedList x:Key="FeedListData"/>
         <myprofile:MyProfile x:Key="MyProfileData"/>
-        <DataTemplate x:Name="images">
-            <StackPanel Orientation="Horizontal">
-                <Image Source="{Binding Src}" Stretch="None" Margin="5,5,5,5"/>
-            </StackPanel>
-        </DataTemplate>
         <DataTemplate x:Name="links">
             <StackPanel>
                 <HyperlinkButton Content="{Binding Title}" NavigateUri="{Binding Url}"  Click="HyperlinkButtonClick" Cursor="Hand" />
-            </StackPanel>
-        </DataTemplate>
-        <DataTemplate x:Name="audios">
-            <StackPanel>
-                <MediaElement Source="{Binding Url}"/>
             </StackPanel>
         </DataTemplate>
         <DataTemplate x:Name="friends">
@@ -75,6 +65,7 @@
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
                         <TextBlock Text="{Binding Text}" TextWrapping="Wrap" Style="{StaticResource PhoneTextNormalStyle}" />
+                        <TextBlock Text="{Binding CntComments}" TextWrapping="Wrap" Foreground="{StaticResource PhoneSubtleBrush}" Style="{StaticResource PhoneTextNormalStyle}" Tap="NavigateToFeed"/>
                         <!--<ItemsControl ItemTemplate="{StaticResource images}" ItemsSource="{Binding Image}"/>
                         <ItemsControl ItemTemplate="{StaticResource links}" ItemsSource="{Binding Link}"/>
                         <ItemsControl ItemTemplate="{StaticResource audios}" ItemsSource="{Binding Audio}"/>-->
@@ -94,51 +85,48 @@
         <controls:Panorama Title="вконтакте">
             <!--Panorama item one-->
             <controls:PanoramaItem>
-                <Grid x:Name="MyProfilePanel" DataContext="{Binding Source={StaticResource MyProfileData}}">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Image x:Name="photo" Grid.Column="0" VerticalAlignment="Top" Margin="0,0,0,0" Width="150" Height="150"/>
-                    <StackPanel Grid.Column="1">
-                        <TextBlock x:Name="LF_name" Margin="20,0,0,0" TextWrapping="Wrap" FontSize="32" />
-                        <TextBlock x:Name="Status" Margin="20,0,0,0" TextWrapping="Wrap" FontSize="16" />
+                <StackPanel x:Name="MyProfilePanel" DataContext="{Binding Source={StaticResource MyProfileData}}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{Binding Photo}" Grid.Column="0" VerticalAlignment="Top" Margin="0,0,0,0" Width="150" Height="150"/>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="{Binding Full_name}" Margin="20,0,0,0" TextWrapping="Wrap" FontSize="32" />
+                            <TextBlock Text="{Binding Status}" Margin="20,0,0,0" TextWrapping="Wrap" FontSize="16" />
+                        </StackPanel>
                     </StackPanel>
-                </Grid>
+                    <TextBlock Text="сообщения" Tap="NavigateToMessagePage" Style="{StaticResource PhoneTextTitle2Style}" Margin="12,20,0,0"/>
+                    <TextBlock Text="друзья" Tap="NavigateToFriendListPage" Style="{StaticResource PhoneTextTitle2Style}" Margin="12,10,0,0"/>
+                    <TextBlock Text="профиль" Style="{StaticResource PhoneTextTitle2Style}" Margin="12,10,0,0"/>
+                    <TextBlock Text="настройки" Tap="NavigateToSettingsPage" Style="{StaticResource PhoneTextTitle2Style}" Margin="12,10,0,0"/>
+                </StackPanel>
             </controls:PanoramaItem>
 
             <!--Panorama item two-->
             <controls:PanoramaItem>
-                <Grid>
+
+                <Grid x:Name="FeedPanel" DataContext="{Binding Source={StaticResource FeedListData}}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <StackPanel Orientation="Vertical">
-                        <toolkit:PhoneTextBox x:Name="PostBox"
-                                         Hint="Что нового?" 
-                                         Grid.Row="0"
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Row="1">
+                        <StackPanel>
+                            <TextBlock Text="новости" Style="{StaticResource PhoneTextTitle1Style}" Margin="12,-40,0,0"/>
+                            <toolkit:PhoneTextBox x:Name="PostBox"
+                                         Hint="Что нового?"
                                          ActionIcon="/Images/appbar.message.send.png"
                                          ActionIconTapped="PostSend"
                                          GotFocus="PostBoxGotFocus"
                                          LostFocus="PostBoxLostFocus"
                                          LengthIndicatorVisible="False" />
-                    </StackPanel>
-                    <Grid x:Name="FeedPanel" Grid.Row="1" DataContext="{Binding Source={StaticResource FeedListData}}">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <ItemsControl x:Name="feedListBox" ItemTemplate="{StaticResource FeedListItem}">
-                            </ItemsControl>
-                        </ScrollViewer>
-                    </Grid>
+                            <ItemsControl x:Name="feedListBox" ItemTemplate="{StaticResource FeedListItem}" ItemsSource="{Binding}"  ></ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
                 </Grid>
 
             </controls:PanoramaItem>
-            
-            <controls:PanoramaItem Header="стена">
+
+            <controls:PanoramaItem>
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -146,8 +134,11 @@
                     </Grid.RowDefinitions>
                     <Grid x:Name="WallPanel" Grid.Row="1" DataContext="{Binding Source={StaticResource FeedListData}}">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <ItemsControl x:Name="wallListBox" ItemTemplate="{StaticResource FeedListItem}">
-                            </ItemsControl>
+                            <StackPanel>
+                                <TextBlock Text="стена" Style="{StaticResource PhoneTextTitle1Style}" Margin="12,-40,0,0"/>
+                                <ItemsControl x:Name="wallListBox" ItemTemplate="{StaticResource FeedListItem}">
+                                </ItemsControl>
+                            </StackPanel>
                         </ScrollViewer>
                     </Grid>
                 </Grid>
@@ -160,11 +151,7 @@
 
     <!--Panorama-based applications should not show an ApplicationBar-->
     <phone:PhoneApplicationPage.ApplicationBar>
-        <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True" Mode="Minimized">
-            <shell:ApplicationBar.MenuItems>
-                <shell:ApplicationBarMenuItem x:Name="menuItem1" Text="сообщения" Click="NavigateToMessagePage"/>
-                <shell:ApplicationBarMenuItem x:Name="menuItem2" Text="друзья" Click="NavigateToFriendListPage"/>
-            </shell:ApplicationBar.MenuItems>
+        <shell:ApplicationBar IsVisible="False" IsMenuEnabled="True" Mode="Default">
         </shell:ApplicationBar>
     </phone:PhoneApplicationPage.ApplicationBar>
 
