@@ -43,7 +43,7 @@
         <album:AlbumList x:Key="AlbumListData" />
         <group:GroupList x:Key="GroupListData" />
         <group:SubscriptionList x:Key="SubscriptionListData" />
-        
+
         <DataTemplate x:Name="images">
             <StackPanel Orientation="Horizontal">
                 <Image Source="{Binding Src}" Stretch="None" Margin="5,5,5,5"/>
@@ -59,7 +59,7 @@
                 <MediaElement Source="{Binding Url}"/>
             </StackPanel>
         </DataTemplate>
-        
+
         <DataTemplate x:Name="WallListItem">
             <Grid Margin="0,0,0,18">
                 <Grid.ColumnDefinitions>
@@ -70,14 +70,15 @@
                 <Image x:Name="photo" Source="{Binding Avatar}" Grid.Column="0" VerticalAlignment="Top" Margin="20,20,10,0" Width="50" Height="50"/>
                 <StackPanel Grid.Column="1">
                     <StackPanel Orientation="Horizontal" Tap="NavigateToProfileFromWall">
-                        <TextBlock x:Name="author" Text="{Binding Author}" Margin="0,0,0,0" TextWrapping="Wrap" FontSize="32" />
+                        <TextBlock x:Name="author" Text="{Binding Author}" Margin="12,0,0,0" TextWrapping="Wrap" Style="{StaticResource PhoneTextTitle2Style}"/>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
-                        <TextBlock Text="{Binding Date}" TextWrapping="Wrap" FontSize="21.333" Foreground="{StaticResource PhoneSubtleBrush}"/>
-                        <TextBlock Text="{Binding Text}" TextWrapping="Wrap" FontSize="21.333"/>
-                        <ItemsControl ItemTemplate="{StaticResource images}" ItemsSource="{Binding Image}"/>
+                        <TextBlock Text="{Binding Text}" TextWrapping="Wrap" Style="{StaticResource PhoneTextNormalStyle}" />
+                        <TextBlock Text="{Binding CntComments}" TextWrapping="Wrap" Foreground="{StaticResource PhoneSubtleBrush}" Style="{StaticResource PhoneTextNormalStyle}" Tap="NavigateToFeed"/>
+                        <!--<ItemsControl ItemTemplate="{StaticResource images}" ItemsSource="{Binding Image}"/>
                         <ItemsControl ItemTemplate="{StaticResource links}" ItemsSource="{Binding Link}"/>
-                        <ItemsControl ItemTemplate="{StaticResource audios}" ItemsSource="{Binding Audio}"/>
+                        <ItemsControl ItemTemplate="{StaticResource audios}" ItemsSource="{Binding Audio}"/>-->
+                        <TextBlock Text="{Binding Date}" TextWrapping="Wrap" Foreground="{StaticResource PhoneSubtleBrush}" Style="{StaticResource PhoneTextSubtleStyle}" />
                     </StackPanel>
                 </StackPanel>
             </Grid>
@@ -94,6 +95,10 @@
                     </StackPanel>
                 </StackPanel>
             </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Name="AlbumListItemHub">
+            <toolkit:HubTile Margin="12,12,0,0" Source="{Binding Cover}" Title="{Binding Title}" Notification="{Binding Size}" DisplayNotification="True"/>
         </DataTemplate>
 
         <DataTemplate x:Name="GroupListItem">
@@ -117,25 +122,19 @@
         <controls:Pivot x:Name="Profile" Title="">
             <!--Pivot item one-->
             <controls:PivotItem Header="стена">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-                    <StackPanel Orientation="Vertical">
-                        <toolkit:PhoneTextBox x:Name="WallPostBox" 
+
+                <Grid x:Name="WallPanel" Grid.Row="1" DataContext="{Binding Source={StaticResource WallListData}}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <toolkit:PhoneTextBox x:Name="WallPostBox" 
                                          Hint="че писать будем?" 
-                                         Grid.Row="0"
                                          ActionIcon="/Images/appbar.message.send.png"
                                          ActionIconTapped="WallPostSend"
                                          LengthIndicatorVisible="False" />
-                    </StackPanel>
-                    <Grid x:Name="WallPanel" Grid.Row="1" DataContext="{Binding Source={StaticResource WallListData}}">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <ItemsControl x:Name="wallListBox" ItemTemplate="{StaticResource WallListItem}">
-                            </ItemsControl>
-                        </ScrollViewer>
-                    </Grid>
+
+                            <ItemsControl x:Name="wallListBox" ItemTemplate="{StaticResource WallListItem}" />
+                        </StackPanel>
+                    </ScrollViewer>
                 </Grid>
             </controls:PivotItem>
 
@@ -176,7 +175,9 @@
 
             <controls:PivotItem Header="фото">
                 <Grid x:Name="AlbumsPanel" Margin="12,0,12,0" DataContext="{Binding Source={StaticResource AlbumListData}}">
-                    <ListBox x:Name="PhotosList" ItemTemplate="{StaticResource AlbumListItem}" ItemsSource="{Binding}" />
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="PhotosList" ItemTemplate="{StaticResource AlbumListItem}" ItemsSource="{Binding}" />
+                    </ScrollViewer>
                     <StackPanel>
                         <TextBlock x:Name="NoAlbums" Style="{StaticResource PhoneTextTitle2Style}" TextWrapping="Wrap"/>
                     </StackPanel>
@@ -185,7 +186,9 @@
 
             <controls:PivotItem Header="группы">
                 <Grid x:Name="GroupsPanel" Margin="12,0,12,0" DataContext="{Binding Source={StaticResource GroupListData}}">
-                    <ListBox x:Name="GroupsList" ItemTemplate="{StaticResource GroupListItem}" ItemsSource="{Binding}" />
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="GroupsList" ItemTemplate="{StaticResource GroupListItem}" ItemsSource="{Binding}" />
+                    </ScrollViewer>
                     <StackPanel>
                         <TextBlock x:Name="NoGroups" Style="{StaticResource PhoneTextTitle2Style}" TextWrapping="Wrap"/>
                     </StackPanel>
@@ -194,7 +197,9 @@
 
             <controls:PivotItem Header="подписки">
                 <Grid x:Name="SubscriptionsPanel" Margin="12,0,12,0" DataContext="{Binding Source={StaticResource SubscriptionListData}}">
-                    <ListBox x:Name="SubscriptionList" ItemTemplate="{StaticResource SubscriptionItem}" ItemsSource="{Binding}" />
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="SubscriptionList" ItemTemplate="{StaticResource SubscriptionItem}" ItemsSource="{Binding}" />
+                    </ScrollViewer>
                     <StackPanel>
                         <TextBlock x:Name="NoSubscriptions" Style="{StaticResource PhoneTextTitle2Style}" TextWrapping="Wrap"/>
                     </StackPanel>

@@ -1,15 +1,6 @@
 ﻿using System;
-using System.IO;
-using System.Net;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
-using Newtonsoft.Json.Linq;
+using System.Diagnostics;
+using System.Threading;
 using WinPhoneApp.Data.Auth;
 using WinPhoneApp.Data.Settings;
 
@@ -47,6 +38,8 @@ namespace WinPhoneApp.Data
         private volatile bool _active;
         public AccessInfoBag Access_token = new AccessInfoBag();
         public SettingsBag Settings = new SettingsBag();
+        public bool exit = false;
+        public Timer refreshTimer;
 
         public bool Active
         {
@@ -68,6 +61,7 @@ namespace WinPhoneApp.Data
             }
             this._active = true;
             this.OnActiveChanged();
+           
             Access_token = AccessInfoStore.Load();
             if (SettingsStore.Load() == null)
             {
@@ -75,12 +69,21 @@ namespace WinPhoneApp.Data
             }
             Settings = SettingsStore.Load();
 
+            refreshTimer = new Timer(RefreshTimerCallback, null, -1, -1);
+            refreshTimer.Change(0, Settings.UpdateTime * 1000);
+
         }
 
         public void Stop()
         {
             this._active = false;
+            refreshTimer.Change(-1, -1);
             this.OnActiveChanged();
+        }
+        
+        public void RefreshTimerCallback(object state)
+        {
+            Debug.WriteLine(DateTime.Now.ToLocalTime());
         }
 
         private void OnActiveChanged()

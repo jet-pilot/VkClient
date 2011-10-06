@@ -1,14 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 using Microsoft.Phone.Controls;
 using WinPhoneApp.Data.Auth;
 using WinPhoneApp.Data;
@@ -32,6 +25,14 @@ namespace WinPhoneApp
                 });
         }
 
+        protected override void OnNavigatedTo(System.Windows.Navigation.NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+
+            if (Client.Instance.Active != true) return;
+            NavigationService.GoBack();
+        }
+
         private void webBrowser1_Navigating(object sender, NavigatingEventArgs e)
         {
             this.Dispatcher.BeginInvoke(() => { this.progressBar1.IsIndeterminate = true; });
@@ -52,10 +53,19 @@ namespace WinPhoneApp
                         };
                         AccessInfoStore.Save(accessInfo);
                         Client.Instance.Start(accessInfo);
-                        NavigationService.Navigate(new System.Uri("/MainPage.xaml", System.UriKind.Relative));
+                        NavigationService.GoBack();
+                        //NavigationService.Navigate(new System.Uri("/MainPage.xaml", System.UriKind.Relative));
                     }
                 });
 
         }
+
+
+        protected override void OnBackKeyPress(CancelEventArgs e)
+        {
+            base.OnBackKeyPress(e);
+            Client.Instance.exit = true;
+        }
+
     }
 }

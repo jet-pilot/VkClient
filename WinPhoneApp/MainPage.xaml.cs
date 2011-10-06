@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using WinPhoneApp.Data.Feed;
@@ -30,6 +31,7 @@ namespace WinPhoneApp
             InitializeComponent();
             Loaded += MainPageLoaded;
         }
+
 
         private void MainPageLoaded(object sender, RoutedEventArgs e)
         {
@@ -59,7 +61,11 @@ namespace WinPhoneApp
             else
             {
                 ListProfileCallback();
-                ListFeedsCallback();
+                if (_fl == null)
+                {
+                    _fl = new FeedList();
+                    ListFeedsCallback();
+                }
                 ListWallCallback();
             }
         }
@@ -69,8 +75,7 @@ namespace WinPhoneApp
 
         private void ListFeedsCallback()
         {
-            if (_fl != null) { return; }
-            _fl = new FeedList();
+            
             var web =
                 (HttpWebRequest)
                 WebRequest.Create(
@@ -148,7 +153,8 @@ namespace WinPhoneApp
                                                                                     Author = (string)profile["first_name"] + " " + (string)profile["last_name"],
                                                                                     Avatar = (string)profile["photo"],
                                                                                     Text = "добавил(а) " + (int)feed["photos"][0] + " фот.",
-                                                                                    Date = new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(Convert.ToDouble((int)feed["date"]))
+                                                                                    Date = new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(Convert.ToDouble((int)feed["date"])),
+                                                                                    Uid = (int)profile["uid"]
                                                                                 };
                                                              _fl.Add(feedItem);
                                                              break;
@@ -164,6 +170,7 @@ namespace WinPhoneApp
                                                                                     Avatar = (string)profile["photo"],
                                                                                     Text = "отмечен(а) на " + (int)feed["photo_tags"][0] + " фот.",
                                                                                     Date = new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(Convert.ToDouble((int)feed["date"])),
+                                                                                    Uid = (int)profile["uid"]
                                                                                 };
                                                              _fl.Add(feedItem);
                                                              break;
@@ -178,7 +185,8 @@ namespace WinPhoneApp
                                                                                     Author = (string)user["first_name"] + " " + (string)user["last_name"],
                                                                                     Avatar = (string)user["photo"],
                                                                                     Date = new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(Convert.ToDouble((int)feed["date"])),
-                                                                                    Text = "добавил(а) в друзья: "
+                                                                                    Text = "добавил(а) в друзья: ",
+                                                                                    Uid = (int)user["uid"]
                                                                                 };
                                                              var friendsAdd = (JArray)feed["friends"];
                                                              for (var i = 1; i < friendsAdd.Count; i++)
@@ -206,8 +214,6 @@ namespace WinPhoneApp
                                              Dispatcher.BeginInvoke(() =>
                                                                         {
                                                                             feedListBox.ItemsSource = _fl;
-                                                                            if (!progressBar1.IsIndeterminate) return;
-                                                                            progressBar1.IsIndeterminate = false;
                                                                         });
                                          }
                                          catch (Exception exception)
@@ -215,7 +221,6 @@ namespace WinPhoneApp
                                              Dispatcher.BeginInvoke(() =>
                                                                              {
                                                                                  MessageBox.Show(exception.Message);
-                                                                                 if (!progressBar1.IsIndeterminate) return;
                                                                                  progressBar1.IsIndeterminate = false;
                                                                              });
                                          }
@@ -284,7 +289,6 @@ namespace WinPhoneApp
                                              Dispatcher.BeginInvoke(() =>
                                                                         {
                                                                             MessageBox.Show(exception.Message);
-                                                                            if (!progressBar1.IsIndeterminate) return;
                                                                             progressBar1.IsIndeterminate = false;
                                                                         });
                                          }
@@ -328,13 +332,16 @@ namespace WinPhoneApp
                                              Dispatcher.BeginInvoke(() =>
                                                                         {
                                                                             wallListBox.ItemsSource = _wl;
-                                                                            if (progressBar1.IsIndeterminate) return;
                                                                             progressBar1.IsIndeterminate = false;
                                                                         });
                                          }
                                          catch (Exception exception)
                                          {
-                                             Dispatcher.BeginInvoke(() => MessageBox.Show(exception.Message));
+                                             Dispatcher.BeginInvoke(() =>
+                                                                        {
+                                                                            MessageBox.Show(exception.Message);
+                                                                            progressBar1.IsIndeterminate = false;
+                                                                        });
                                          }
                                      }, web);
             if (progressBar1.IsIndeterminate == false)
@@ -373,19 +380,13 @@ namespace WinPhoneApp
                                                            Full_name = (string)responseArray[0]["first_name"] + " " + (string)responseArray[0]["last_name"],
                                                            Photo = (string)responseArray[0]["photo"]
                                                        };
-                                             Dispatcher.BeginInvoke(() =>
-                                             {
-                                                 StatusCallback();
-                                                 if (!progressBar1.IsIndeterminate) return;
-                                                 progressBar1.IsIndeterminate = false;
-                                             });
+                                             Dispatcher.BeginInvoke(StatusCallback);
                                          }
                                          catch (Exception ex)
                                          {
                                              Dispatcher.BeginInvoke(() =>
                                                                         {
                                                                             MessageBox.Show(ex.Message);
-                                                                            if (!progressBar1.IsIndeterminate) return;
                                                                             progressBar1.IsIndeterminate = false;
                                                                         });
                                          }
@@ -417,8 +418,6 @@ namespace WinPhoneApp
                                                                         {
                                                                             _mp.Status = (string)o["response"]["text"];
                                                                             MyProfilePanel.DataContext = _mp;
-                                                                            if (!progressBar1.IsIndeterminate) return;
-                                                                            progressBar1.IsIndeterminate = false;
                                                                         });
                                          }
                                          catch (Exception ex)
@@ -485,35 +484,34 @@ namespace WinPhoneApp
             var web = (HttpWebRequest)WebRequest.Create(string.Format("https://api.vkontakte.ru/method/wall.post?owner_id={0}&message={1}&access_token={2}", Client.Instance.Access_token.uid, message, Client.Instance.Access_token.token));
             web.Method = "POST";
             web.ContentType = "application/x-www-form-urlencoded";
-            web.BeginGetResponse(ResponcePreparePost, web);
+            web.BeginGetResponse(delegate(IAsyncResult e)
+                                     {
+                                         var request = (HttpWebRequest)e.AsyncState;
+                                         var response = (HttpWebResponse)request.EndGetResponse(e);
+
+                                         var responseReader = new StreamReader(response.GetResponseStream());
+
+                                         var responseString = responseReader.ReadToEnd();
+
+                                         try
+                                         {
+                                             var o = JObject.Parse(responseString);
+                                             Dispatcher.BeginInvoke(() =>
+                                             {
+                                                 var postId = (int)o["response"]["post_id"];
+                                                 Debug.WriteLine(postId.ToString());
+                                                 PostBox.Text = "";
+                                                 progressBar1.IsIndeterminate = false;
+                                             });
+                                         }
+                                         catch (Exception ex)
+                                         {
+                                             Dispatcher.BeginInvoke(() => MessageBox.Show(ex.Message));
+                                         }
+                                     }, web);
             if (progressBar1.IsIndeterminate == false)
             {
                 progressBar1.IsIndeterminate = true;
-            }
-        }
-        public void ResponcePreparePost(IAsyncResult e)
-        {
-            var request = (HttpWebRequest)e.AsyncState;
-            var response = (HttpWebResponse)request.EndGetResponse(e);
-
-            var responseReader = new StreamReader(response.GetResponseStream());
-
-            string responseString = responseReader.ReadToEnd();
-
-            try
-            {
-                var o = JObject.Parse(responseString);
-                Dispatcher.BeginInvoke(() =>
-                {
-                    var postId = (int)o["response"]["post_id"];
-                    Debug.WriteLine(postId.ToString());
-                    PostBox.Text = "";
-                    progressBar1.IsIndeterminate = false;
-                });
-            }
-            catch (Exception ex)
-            {
-                Dispatcher.BeginInvoke(() => MessageBox.Show(ex.Message));
             }
         }
         #endregion
@@ -569,6 +567,12 @@ namespace WinPhoneApp
         private void NavigateToSettingsPage(object sender, System.Windows.Input.GestureEventArgs e)
         {
             NavigationService.Navigate(new Uri("/SettingsPage.xaml", UriKind.Relative));
+        }
+
+        private void SignOut(object sender, System.Windows.Input.GestureEventArgs e)
+        {
+            Client.Instance.Stop();
+            NavigationService.Navigate(new Uri("/SignInPage.xaml", UriKind.Relative));
         }
 
         #region получаем ссылку для загрузки

@@ -27,7 +27,13 @@
             <!--Pivot item one-->
             <controls:PivotItem Header="приложение">
                 <Grid>
-                    <toolkit:ListPicker ItemsSource="{Binding UpdateTimeList}" SelectedIndex="0" Header="период обновления" FullModeHeader="период обновления" FullModeItemTemplate="{StaticResource FullTemplate}" />
+                    <toolkit:ListPicker x:Name="UpdateTimePicker"
+                                        ItemsSource="{Binding UpdateTimeList}" 
+                                        SelectedIndex="0" 
+                                        SelectionChanged="ListPicker_SelectionChanged"
+                                        Header="период обновления" 
+                                        FullModeHeader="период обновления" 
+                                        FullModeItemTemplate="{StaticResource FullTemplate}" />
                 </Grid>
             </controls:PivotItem>
 

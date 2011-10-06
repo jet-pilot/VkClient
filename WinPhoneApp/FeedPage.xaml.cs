@@ -63,7 +63,7 @@ namespace WinPhoneApp
                         var attachments = feed.SelectToken("attachments", false);
                         FeedItem.Date = new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(Convert.ToDouble((int)feed["date"]));
                         FeedItem.CntComments = "комментариев: " + (int)feed["comments"]["count"];
-                        FeedItem.Text = (string) feed["text"];
+                        FeedItem.Text = (string)feed["text"];
                         if ((string)feed["post_source"]["data"] == "profile_photo")
                         {
                             FeedItem.Text = "обновил(а) фотографию на странице";
@@ -158,10 +158,10 @@ namespace WinPhoneApp
 
                     foreach (var comment in FeedItem.Comments)
                     {
-                        foreach (var user in responseArray.Where(user => comment.Uid == (int) user["uid"]))
+                        foreach (var user in responseArray.Where(user => comment.Uid == (int)user["uid"]))
                         {
                             comment.FullName = (string)user["first_name"] + " " + (string)user["last_name"];
-                            comment.Photo = (string) user["photo"];
+                            comment.Photo = (string)user["photo"];
                             break;
                         }
                     }
@@ -207,22 +207,41 @@ namespace WinPhoneApp
                 {
                     var responseString = responseReader.ReadToEnd();
                     var o = JObject.Parse(responseString);
-                    var responseArray = (JArray)o["response"];
-                    for (var i = 1; i < responseArray.Count;i++ )
+                    try
                     {
-                        var commentItem = new CommentItem
-                                              {
-                                                  Cid = (int)responseArray[i]["cid"],
-                                                  Uid = (int)responseArray[i]["uid"],
-                                                  Date =
-                                                      new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(
-                                                          Convert.ToDouble((int)responseArray[i]["date"])),
-                                                  Text = (string)responseArray[i]["text"]
-                                              };
-                        //if ((int)responseArray[i]["reply_to_uid"] > 0) { commentItem.ReplyToUid = (int)responseArray[i]["reply_to_uid"]; }
-                        //if ((int)responseArray[i]["reply_to_cid"] > 0) { commentItem.ReplyToCid = (int)responseArray[i]["reply_to_cid"]; }
-                        FeedItem.Comments.Add(commentItem);
-                        _uidlist.Add((int)responseArray[i]["uid"]);
+
+                        var responseArray = (JArray)o["response"];
+                        for (var i = 1; i < responseArray.Count; i++)
+                        {
+                            var commentItem = new CommentItem
+                                                  {
+                                                      Cid = (int)responseArray[i]["cid"],
+                                                      Uid = (int)responseArray[i]["uid"],
+                                                      Date =
+                                                          new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(
+                                                              Convert.ToDouble((int)responseArray[i]["date"])),
+                                                      Text = (string)responseArray[i]["text"]
+                                                  };
+                            //if ((int)responseArray[i]["reply_to_uid"] > 0) { commentItem.ReplyToUid = (int)responseArray[i]["reply_to_uid"]; }
+                            //if ((int)responseArray[i]["reply_to_cid"] > 0) { commentItem.ReplyToCid = (int)responseArray[i]["reply_to_cid"]; }
+                            FeedItem.Comments.Add(commentItem);
+                            _uidlist.Add((int)responseArray[i]["uid"]);
+                        }
+                    }
+                    catch
+                    {
+                        switch ((int)o["error"]["error_code"])
+                        {
+                            case 212:
+                                {
+                                    Dispatcher.BeginInvoke(() =>
+                                                               {
+                                                                   CommentBox.Visibility = Visibility.Collapsed;
+                                                                   MessageBox.Show("Вы не можете читать и оставлять комментарии");
+                                                               });
+                                    break;
+                                }
+                        }
                     }
                     Dispatcher.BeginInvoke(ListProfileCallback);
                 }
@@ -295,6 +314,6 @@ namespace WinPhoneApp
             progressBar1.IsIndeterminate = true;
         }
         #endregion
-    
+
     }
 }

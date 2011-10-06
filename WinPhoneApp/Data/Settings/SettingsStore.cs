@@ -14,6 +14,11 @@ namespace WinPhoneApp.Data.Settings
             IsolatedStorageSettings.ApplicationSettings.Save();
         }
 
+        public static void SaveUpdateTime(int updateTime)
+        {
+            IsolatedStorageSettings.ApplicationSettings[UpdateTimeKey] = updateTime;
+        }
+
         public static void SaveDefaults()
         {
             IsolatedStorageSettings.ApplicationSettings[UpdateTimeKey] = 3;

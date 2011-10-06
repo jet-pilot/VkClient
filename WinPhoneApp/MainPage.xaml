@@ -97,6 +97,7 @@
                     <TextBlock Text="друзья" Tap="NavigateToFriendListPage" Style="{StaticResource PhoneTextTitle2Style}" Margin="12,10,0,0"/>
                     <TextBlock Text="профиль" Style="{StaticResource PhoneTextTitle2Style}" Margin="12,10,0,0"/>
                     <TextBlock Text="настройки" Tap="NavigateToSettingsPage" Style="{StaticResource PhoneTextTitle2Style}" Margin="12,10,0,0"/>
+                    <TextBlock Text="выйти" Tap="SignOut" Style="{StaticResource PhoneTextTitle2Style}" Margin="12,10,0,0"/>
                 </StackPanel>
             </controls:PanoramaItem>
 
